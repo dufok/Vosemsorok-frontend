@@ -211,6 +211,41 @@ body {
 }
 .status.error { color: #8b3a3a; }
 
+
+/* ── Dark Theme ─────────────────────────────────── */
+body.dark {
+  --bg:            #0f0f0f;
+  --text:          #e8e3da;
+  --text-dim:      #6b6560;
+  --timeline-line: #e8e3da;
+}
+
+/* ── Theme Toggle Button ────────────────────────── */
+.theme-toggle {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text);
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'ModeNine', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+.theme-toggle:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+
 /* ── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
   :root {

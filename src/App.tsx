@@ -8,6 +8,7 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
+  const [dark, setDark]         = useState(false);
 
   useEffect(() => {
     fetchProjects()
@@ -15,6 +16,10 @@ export default function App() {
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle('dark', dark);
+  }, [dark]);
 
   return (
     <div className="app">
@@ -24,6 +29,13 @@ export default function App() {
         {error   && <p className="status error">{error}</p>}
         {!loading && !error && <Timeline projects={projects} />}
       </main>
+      <button
+        className="theme-toggle"
+        onClick={() => setDark(d => !d)}
+        title="Toggle theme"
+      >
+        {dark ? 'LGT' : 'DRK'}
+      </button>
     </div>
   );
 }
