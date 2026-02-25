@@ -198,7 +198,7 @@ body {
 .project-overview {
   font-family: 'Cascadia Code', 'Courier New', monospace;
   font-size: 0.82rem;
-  color: var(--text-dim);
+  color: var(--text);
   line-height: 1.75;
 }
 
