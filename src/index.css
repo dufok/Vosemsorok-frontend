@@ -1,7 +1,7 @@
 /* ── Fonts ──────────────────────────────────────── */
 @font-face {
   font-family: 'ModeNine';
-  src: url('/fonts/Modenine-2OPd.ttf') format('truetype');
+  src: url('/fonts/Modenine.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
