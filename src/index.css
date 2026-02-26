@@ -246,6 +246,17 @@ body.dark {
   color: var(--bg);
 }
 
+
+/* ── Auto Dark (follows OS) ─────────────────────── */
+@media (prefers-color-scheme: dark) {
+  body:not(.light) {
+    --bg:            #0f0f0f;
+    --text:          #e8e3da;
+    --text-dim:      #6b6560;
+    --timeline-line: #e8e3da;
+  }
+}
+
 /* ── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
   :root {

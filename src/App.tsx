@@ -4,11 +4,13 @@ import { Timeline } from './components/Timeline';
 import { fetchProjects } from './api/client';
 import type { Project } from './types';
 
+type Theme = 'auto' | 'light' | 'dark';
+
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
-  const [dark, setDark]         = useState(false);
+  const [theme, setTheme]       = useState<Theme>('auto');
 
   useEffect(() => {
     fetchProjects()
@@ -18,8 +20,22 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    document.body.classList.toggle('dark', dark);
-  }, [dark]);
+    const body = document.body;
+
+    if (theme === 'auto') {
+      // Remove manual overrides — let CSS prefers-color-scheme take over
+      body.classList.remove('light', 'dark');
+    } else {
+      body.classList.remove('light', 'dark');
+      body.classList.add(theme);
+    }
+  }, [theme]);
+
+  const cycleTheme = () => {
+    setTheme(t => t === 'auto' ? 'dark' : t === 'dark' ? 'light' : 'auto');
+  };
+
+  const label = theme === 'auto' ? 'AUT' : theme === 'dark' ? 'DRK' : 'LGT';
 
   return (
     <div className="app">
@@ -31,10 +47,10 @@ export default function App() {
       </main>
       <button
         className="theme-toggle"
-        onClick={() => setDark(d => !d)}
-        title="Toggle theme"
+        onClick={cycleTheme}
+        title={`Theme: ${theme}`}
       >
-        {dark ? 'LGT' : 'DRK'}
+        {label}
       </button>
     </div>
   );
