@@ -1,73 +1,108 @@
-# React + TypeScript + Vite
+# Vosemsorok Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Portfolio website for **Stepan Vladovskii** — 3D Designer & Visualizer.
 
-Currently, two official plugins are available:
+Brutalist timeline layout with bitmap fonts, infinite marquee header,
+and per-project horizontal photo galleries.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Vite 7** + **React 18** + **TypeScript**
+- Plain CSS with custom properties — no UI framework
+- Fonts: ModeNine (WOFF2, local), VT323 (TTF, local), Cascadia Code
+- Drag-scroll hook for mouse and touch gallery interaction
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Project Structure
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+frontend/
+├── public/
+│ └── fonts/
+│ ├── Modenine.woff2 # Converted + repaired from dafont TTF
+│ └── VT323-Regular.ttf
+├── src/
+│ ├── api/
+│ │ └── client.ts # fetchProjects(), imageUrl()
+│ ├── components/
+│ │ ├── MarqueeHeader.tsx # Fixed top scrolling ticker
+│ │ ├── Timeline.tsx # Full project list
+│ │ ├── ProjectCard.tsx # Year, role, gallery, overview
+│ │ └── PhotoGallery.tsx # Horizontal draggable image strip
+│ ├── hooks/
+│ │ └── useDragScroll.ts # clientX-based drag scroll
+│ ├── types/
+│ │ └── index.ts # Project, ProjectImage types
+│ ├── App.tsx # Root component, theme toggle
+│ ├── index.css # All styles + light/dark theme
+│ └── main.tsx
+├── index.html
+├── .env.development
+└── vite.config.ts
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+text
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Design
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Element | Detail |
+|---|---|
+| Background (light) | `#c6bbaa` warm beige |
+| Background (dark) | `#0f0f0f` near black |
+| Text | `#1a1a1a` / `#e8e3da` |
+| Timeline spine | `1.5px` vertical line, left side |
+| Year font | ModeNine |
+| Role font | VT323 |
+| Overview font | Cascadia Code |
+| Gallery | Full bleed right, clipped left at year indent |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+## Getting Started
+
+### Requirements
+
+- Node.js 20+
+- Backend running on `localhost:3001`
+  → [Vosemsorok Backend](https://github.com/dufok/Vosemsorok-backend)
+
+### Install
+
+```bash
+npm install
+Environment
+Create .env.development:
+
+text
+VITE_API_URL=http://localhost:3001
+Dev Server
+bash
+npm run dev
+# → http://localhost:5173
+Production Build
+bash
+npm run build
+# outputs to dist/
+Theme
+Light/dark toggle button is fixed bottom-right. All colors are CSS
+custom properties — toggling adds body.dark which overrides
+--bg, --text, and --text-dim.
+
+Font Notes
+ModeNine is sourced from dafont.com/modenine.
+The original TTF has a malformed hdmx table that causes Firefox warnings.
+The Modenine.woff2 in public/fonts/ is a repaired conversion
+generated with fontTools:
+
+python
+from fontTools.ttLib import TTFont
+font = TTFont('Modenine.ttf')
+del font['hdmx']
+font.flavor = 'woff2'
+font.save('Modenine.woff2')
+Related
+Backend API: github.com/dufok/Vosemsorok-backend
+
