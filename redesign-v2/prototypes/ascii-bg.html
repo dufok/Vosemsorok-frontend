@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BADPROMT — ASCII background prototype v0</title>
+<style>
+  :root{ --bg:#0A0A0A; --amber1:#FF8A00; --amber2:#FFB000; --text:#F5F5F0; --dim:#8A8A82; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; background:var(--bg); overflow:hidden; }
+  #scene{ position:fixed; inset:0; width:100vw; height:100vh; display:block; }
+  /* control panel */
+  #panel{
+    position:fixed; left:16px; bottom:16px; z-index:10;
+    width:300px; padding:14px 16px; border:1px solid var(--amber1); border-radius:14px;
+    background:rgba(10,10,10,.72); backdrop-filter:blur(6px);
+    font:13px/1.4 ui-monospace,"Cascadia Code",Menlo,monospace; color:var(--text);
+  }
+  #panel h1{ font-size:12px; letter-spacing:.12em; color:var(--amber2); margin-bottom:10px; text-transform:uppercase; }
+  .row{ margin:10px 0; }
+  .row label{ display:flex; justify-content:space-between; color:var(--dim); margin-bottom:4px; }
+  .row label b{ color:var(--text); font-weight:600; }
+  input[type=range]{ width:100%; accent-color:var(--amber1); }
+  #hud{ position:fixed; right:16px; top:16px; z-index:10; font:12px/1.5 ui-monospace,monospace; color:var(--dim); text-align:right; }
+  #hud b{ color:var(--amber2); }
+  .hint{ color:var(--dim); font-size:11px; margin-top:8px; }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div id="hud">
+  <div>zoom <b id="hZoom">0%</b></div>
+  <div>charset <b id="hSet">blocks</b></div>
+  <div>target <b id="hImg">BADPROMT</b></div>
+  <div>fps <b id="hFps">0</b></div>
+</div>
+
+<div id="panel">
+  <h1>ASCII background · v0</h1>
+  <div class="row">
+    <label>vertical scroll (dolly zoom) <b id="vVal">0.00</b></label>
+    <input id="vert" type="range" min="0" max="1" step="0.001" value="0">
+  </div>
+  <div class="row">
+    <label>horizontal scroll (charset morph) <b id="hVal">0.00</b></label>
+    <input id="horiz" type="range" min="0" max="1" step="0.001" value="0">
+  </div>
+  <div class="row">
+    <label>flicker <b id="fVal">2.5%</b></label>
+    <input id="flick" type="range" min="0" max="0.12" step="0.005" value="0.025">
+  </div>
+  <div class="hint">drag vertical → image emerges &amp; crossfades. URL params: ?v=&amp;h=&amp;still=1</div>
+</div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const params = new URLSearchParams(location.search);
+
+// ---- config -------------------------------------------------------------
+const CFG = {
+  minFont: 11,        // px, zoomed-out (dense grid)
+  maxFont: 64,        // px, zoomed-in
+  zoomMax: 6.0,       // image magnification at full vertical
+  baseHue: 32,        // amber
+  hueAmp: 7,          // colour drift amplitude
+  crossfadeStart: 0.78, // vertical fraction where next image starts blending in
+};
+
+// density-ordered charsets (sparse/dark -> dense/light)
+const SETS = [
+  { name:"blocks",  chars:" .:-=+*#%@" },
+  { name:"digits",  chars:" 1742305689" },
+  { name:"letters", chars:" il:ctsavoengOMW" },
+  { name:"symbols", chars:" ·.:;!?*+%#@" },
+];
+
+// procedural "images": big words rendered to an offscreen brightness map
+const TARGETS = ["BADPROMT", "800", "ssory", "again?"];
+
+// ---- offscreen brightness maps -----------------------------------------
+const MAPW = 220, MAPH = 132;          // sampling resolution of each target
+const maps = TARGETS.map(word => buildWordMap(word));
+
+function buildWordMap(word){
+  const c = document.createElement("canvas");
+  c.width = MAPW; c.height = MAPH;
+  const x = c.getContext("2d");
+  x.fillStyle = "#000"; x.fillRect(0,0,MAPW,MAPH);
+  x.fillStyle = "#fff";
+  x.textAlign = "center"; x.textBaseline = "middle";
+  // fit font size to width
+  let fs = 120;
+  x.font = `900 ${fs}px Impact, "Arial Black", sans-serif`;
+  while (x.measureText(word).width > MAPW*0.9 && fs > 8){ fs -= 2; x.font = `900 ${fs}px Impact,"Arial Black",sans-serif`; }
+  x.fillText(word, MAPW/2, MAPH/2);
+  const data = x.getImageData(0,0,MAPW,MAPH).data;
+  // luminance grid 0..1
+  const g = new Float32Array(MAPW*MAPH);
+  for (let i=0;i<MAPW*MAPH;i++){ g[i] = data[i*4]/255; } // red == luminance (white text)
+  return g;
+}
+function sampleMap(g, u, v){
+  // u,v in 0..1 -> bilinear-ish nearest sample
+  if (u<0||u>1||v<0||v>1) return 0;
+  const px = Math.min(MAPW-1, Math.max(0, (u*MAPW)|0));
+  const py = Math.min(MAPH-1, Math.max(0, (v*MAPH)|0));
+  return g[py*MAPW+px];
+}
+
+// ---- canvas -------------------------------------------------------------
+const cv = $("#scene"), ctx = cv.getContext("2d", { alpha:false });
+let W=0, H=0, DPR=Math.min(2, window.devicePixelRatio||1);
+function resize(){
+  W = cv.clientWidth; H = cv.clientHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener("resize", resize); resize();
+
+// ---- controls -----------------------------------------------------------
+const vert=$("#vert"), horiz=$("#horiz"), flick=$("#flick");
+if (params.has("v")) vert.value = params.get("v");
+if (params.has("h")) horiz.value = params.get("h");
+const STILL = params.get("still")==="1";
+if (STILL) flick.value = "0";
+function syncLabels(){ $("#vVal").textContent=(+vert.value).toFixed(2); $("#hVal").textContent=(+horiz.value).toFixed(2); $("#fVal").textContent=(flick.value*100).toFixed(1)+"%"; }
+[vert,horiz,flick].forEach(el=>el.addEventListener("input",syncLabels)); syncLabels();
+
+// pick charset by horizontal position (with a soft step between sets)
+function charsetFor(h){
+  const f = h*(SETS.length-1);
+  return SETS[Math.round(f)];
+}
+
+// ---- render loop --------------------------------------------------------
+let lastT=performance.now(), frames=0, fpsT=0, fps=0;
+function frame(now){
+  const dt = now-lastT; lastT=now;
+  fpsT+=dt; frames++; if(fpsT>=500){ fps=Math.round(frames/(fpsT/1000)); frames=0; fpsT=0; $("#hFps").textContent=fps; }
+
+  const v = +vert.value, h = +horiz.value, fl = STILL?0:+flick.value;
+  const set = charsetFor(h), chars = set.chars, nC = chars.length;
+
+  // dolly zoom: font grows with v; image magnifies; crossfade near top
+  const font = CFG.minFont + (CFG.maxFont-CFG.minFont)*v;
+  const zoom = 1 + (CFG.zoomMax-1)*v;
+  const cellH = font, cellW = font*0.6;
+  const cols = Math.ceil(W/cellW), rows = Math.ceil(H/cellH);
+
+  // which targets blend
+  const imgI = 0; // base target stays index 0 in v0 (slider drives one cycle)
+  const nextI = (imgI+1)%maps.length;
+  const fade = v>CFG.crossfadeStart ? (v-CFG.crossfadeStart)/(1-CFG.crossfadeStart) : 0;
+  $("#hImg").textContent = fade>0.5 ? TARGETS[nextI] : TARGETS[imgI];
+  $("#hZoom").textContent = Math.round(v*100)+"%";
+  $("#hSet").textContent = set.name;
+
+  // colour drift
+  const hue = CFG.baseHue + CFG.hueAmp*Math.sin(now/2600);
+
+  ctx.fillStyle = "#0A0A0A"; ctx.fillRect(0,0,W,H);
+  ctx.font = `${font}px ui-monospace, "Cascadia Code", Menlo, monospace`;
+  ctx.textBaseline = "top";
+
+  const cx = cols/2, cy = rows/2;
+  for (let r=0;r<rows;r++){
+    for (let c=0;c<cols;c++){
+      // map cell -> image uv with zoom centred
+      const u = 0.5 + ((c+0.5)/cols - 0.5)/zoom;
+      const w = 0.5 + ((r+0.5)/rows - 0.5)/zoom;
+      let b = sampleMap(maps[imgI], u, w);
+      if (fade>0) b = b*(1-fade) + sampleMap(maps[nextI], u, w)*fade;
+
+      // flicker: random char, else brightness char
+      let ch;
+      if (fl>0 && Math.random()<fl){ ch = chars[(Math.random()*nC)|0]; }
+      else { ch = chars[Math.min(nC-1, (b*(nC-1)+0.5)|0)]; }
+      if (ch===" ") continue;
+
+      // brightness -> lightness (image emerges); idle areas stay dim amber
+      const L = 14 + b*54;          // 14%..68%
+      ctx.fillStyle = `hsl(${hue} 100% ${L}%)`;
+      ctx.fillText(ch, c*cellW, r*cellH);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

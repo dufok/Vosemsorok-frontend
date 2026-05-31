@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BADPROMT — interactive ASCII logo background</title>
+<style>
+  :root{ --bg:#0A0A0A; --amber1:#FF8A00; --amber2:#FFB000; --text:#F5F5F0; --dim:#8A8A82; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; background:var(--bg); overflow:hidden; cursor:crosshair; }
+  #scene{ position:fixed; inset:0; width:100vw; height:100vh; display:block; }
+  #gl{ display:none; }
+  #panel{ position:fixed; left:16px; bottom:16px; z-index:10; width:300px; padding:14px 16px;
+    border:1px solid var(--amber1); border-radius:14px; background:rgba(10,10,10,.72); backdrop-filter:blur(6px);
+    font:13px/1.4 ui-monospace,"Cascadia Code",Menlo,monospace; color:var(--text); }
+  #panel h1{ font-size:12px; letter-spacing:.12em; color:var(--amber2); margin-bottom:10px; text-transform:uppercase; }
+  .row{ margin:10px 0; } .row label{ display:flex; justify-content:space-between; color:var(--dim); margin-bottom:4px; }
+  .row label b{ color:var(--text); font-weight:600; } input[type=range]{ width:100%; accent-color:var(--amber1); }
+  #hud{ position:fixed; right:16px; top:16px; z-index:10; font:12px/1.5 ui-monospace,monospace; color:var(--dim); text-align:right; }
+  #hud b{ color:var(--amber2); } .hint{ color:var(--dim); font-size:11px; margin-top:8px; }
+  #err{ position:fixed; left:16px; top:16px; z-index:20; color:#ff5a5a; font:12px/1.4 ui-monospace,monospace; max-width:60ch; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<canvas id="gl"></canvas>
+<div id="err"></div>
+<div id="hud">
+  <div>mouse <b id="hMouse">0.00, 0.00</b></div>
+  <div>dolly <b id="hZoom">0%</b></div>
+  <div>charset <b id="hSet">blocks</b></div>
+  <div>fps <b id="hFps">0</b></div>
+</div>
+<div id="panel">
+  <h1>ASCII logo bg · v2</h1>
+  <div class="row"><label>vertical (camera dolly) <b id="vVal">0.50</b></label>
+    <input id="vert" type="range" min="0" max="1" step="0.001" value="0.50"></div>
+  <div class="row"><label>horizontal (charset) <b id="hVal">0.66</b></label>
+    <input id="horiz" type="range" min="0" max="1" step="0.001" value="0.66"></div>
+  <div class="row"><label>flicker <b id="fVal">2.0%</b></label>
+    <input id="flick" type="range" min="0" max="0.12" step="0.005" value="0.02"></div>
+  <div class="hint">move mouse → logo turns · drag vertical → dolly in · ?debug=1</div>
+</div>
+
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+const $ = s => document.querySelector(s);
+const P = new URLSearchParams(location.search);
+const DEBUG = P.get("debug")==="1";
+const STILL = P.get("still")==="1";
+const D2R = Math.PI/180;
+const showErr = m => { $("#err").textContent = m; };
+
+// baked base orientation (calibrated 2026-05-31)
+const BASE = { x:10, y:-83, z:1 };
+
+const FONT = 13, CELLW = FONT*0.6, CELLH = FONT;
+const SETS = [
+  { name:"blocks",  chars:" .:-=+*#%@" },
+  { name:"digits",  chars:" 1742305689" },
+  { name:"letters", chars:" il:ctsavoengOMW" },
+  { name:"symbols", chars:" ·.:;!?*+%#@" },
+];
+const baseHue=32, hueAmp=7;
+
+const cv=$("#scene"), ctx=cv.getContext("2d",{alpha:false});
+let W=0,H=0,cols=0,rows=0;
+
+const renderer = new THREE.WebGLRenderer({ canvas:$("#gl"), antialias:false });
+renderer.setPixelRatio(1); renderer.setClearColor(0x000000, 1);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+scene.add(new THREE.AmbientLight(0xffffff, 0.40));
+const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(1.2,1.6,2.2); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 0.55); rim.position.set(-1.5,-0.6,-1.0); scene.add(rim);
+
+const pivot = new THREE.Group(); scene.add(pivot);     // mouse rotation
+const holder = new THREE.Group(); pivot.add(holder);   // baked base orientation
+holder.rotation.set(BASE.x*D2R, BASE.y*D2R, BASE.z*D2R);
+let rt=null, buf=null, fitDist=4, ready=false;
+
+function buildRT(){
+  W=cv.clientWidth; H=cv.clientHeight; cv.width=W; cv.height=H;
+  cols=Math.max(8,Math.ceil(W/CELLW)); rows=Math.max(8,Math.ceil(H/CELLH));
+  if(rt) rt.dispose();
+  rt=new THREE.WebGLRenderTarget(cols,rows,{depthBuffer:true});
+  buf=new Uint8Array(cols*rows*4);
+  renderer.setSize(cols,rows,false);
+  camera.aspect=W/H; camera.updateProjectionMatrix();
+}
+buildRT(); window.addEventListener("resize", buildRT);
+
+new GLTFLoader().load("../GRAPHICS/logo.glb",
+  (gltf)=>{
+    const model=gltf.scene;
+    const mat=new THREE.MeshStandardMaterial({ color:0xffffff, metalness:0.0, roughness:0.7 });
+    model.traverse(o=>{ if(o.isMesh) o.material=mat; });
+    const box=new THREE.Box3().setFromObject(model);
+    const center=box.getCenter(new THREE.Vector3());
+    model.position.sub(center);
+    holder.add(model);
+    const sph=box.getBoundingSphere(new THREE.Sphere());
+    fitDist = sph.radius / Math.sin(THREE.MathUtils.degToRad(camera.fov/2));
+    ready=true;
+  }, undefined, (e)=>showErr("glb load error: "+(e&&e.message||e)));
+
+const vert=$("#vert"),horiz=$("#horiz"),flick=$("#flick");
+if(P.has("v")) vert.value=P.get("v");
+if(P.has("h")) horiz.value=P.get("h");
+if(STILL) flick.value="0";
+function sync(){ $("#vVal").textContent=(+vert.value).toFixed(2); $("#hVal").textContent=(+horiz.value).toFixed(2); $("#fVal").textContent=(flick.value*100).toFixed(1)+"%"; }
+[vert,horiz,flick].forEach(e=>e.addEventListener("input",sync)); sync();
+
+const target={x:0,y:0}, ROT_X=0.38, ROT_Y=0.55;
+addEventListener("mousemove",e=>{
+  const nx=(e.clientX/innerWidth)*2-1, ny=(e.clientY/innerHeight)*2-1;
+  target.y=nx*ROT_Y; target.x=ny*ROT_X;
+  $("#hMouse").textContent=nx.toFixed(2)+", "+ny.toFixed(2);
+});
+const charsetFor=h=>SETS[Math.round(h*(SETS.length-1))];
+
+let lastT=performance.now(),frames=0,fpsT=0;
+function frame(now){
+  const dt=now-lastT; lastT=now; fpsT+=dt; frames++;
+  if(fpsT>=500){ $("#hFps").textContent=Math.round(frames/(fpsT/1000)); frames=0; fpsT=0; }
+
+  if(ready){
+    pivot.rotation.x += (target.x-pivot.rotation.x)*0.09;
+    pivot.rotation.y += (target.y-pivot.rotation.y)*0.09;
+    const v=+vert.value;
+    const dist=fitDist*(1.15-0.80*v);
+    camera.position.set(0,0,dist); camera.lookAt(0,0,0);
+    $("#hZoom").textContent=Math.round(v*100)+"%";
+    renderer.setRenderTarget(rt); renderer.render(scene,camera);
+    renderer.readRenderTargetPixels(rt,0,0,cols,rows,buf); renderer.setRenderTarget(null);
+  }
+
+  const h=+horiz.value, fl=STILL?0:+flick.value;
+  const set=charsetFor(h), chars=set.chars, nC=chars.length;
+  $("#hSet").textContent=set.name;
+  const hue=baseHue+hueAmp*Math.sin(now/2600);
+  ctx.fillStyle="#0A0A0A"; ctx.fillRect(0,0,W,H);
+
+  if(DEBUG){
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+      const sr=rows-1-r, i=(sr*cols+c)*4; const l=buf?buf[i]:0; if(l<6)continue;
+      ctx.fillStyle=`rgb(${l},${(l*0.55)|0},0)`; ctx.fillRect(c*CELLW,r*CELLH,CELLW,CELLH);
+    }
+  } else {
+    ctx.font=`${FONT}px ui-monospace,"Cascadia Code",Menlo,monospace`; ctx.textBaseline="top";
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+      const sr=rows-1-r, i=(sr*cols+c)*4;
+      const lum=buf?(buf[i]*0.299+buf[i+1]*0.587+buf[i+2]*0.114)/255:0;
+      let ch;
+      if(fl>0 && Math.random()<fl) ch=chars[(Math.random()*nC)|0];
+      else ch=chars[Math.min(nC-1,(lum*(nC-1)+0.5)|0)];
+      if(ch===" ") continue;
+      const L=8+lum*62;
+      ctx.fillStyle=`hsl(${hue} 100% ${L}%)`;
+      ctx.fillText(ch,c*CELLW,r*CELLH);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
