@@ -63,7 +63,9 @@ export function Logo3D() {
         const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
         mats.forEach((m) => {
           const sm = m as THREE.MeshStandardMaterial;
-          sm.envMapIntensity = 1.4;
+          sm.metalness = 1.0;        // full chrome mirror
+          sm.roughness = 0.05;       // sharp reflection of the bg
+          sm.envMapIntensity = 1.7;
           sm.needsUpdate = true;
         });
       });
@@ -94,7 +96,7 @@ export function Logo3D() {
       if (ready) {
         pivot.rotation.x += (target.x - pivot.rotation.x) * 0.08;
         pivot.rotation.y += (target.y - pivot.rotation.y) * 0.08;
-        camera.position.set(0, 0, fitDist * 1.15);
+        camera.position.set(0, 0, fitDist * 0.75);
         camera.lookAt(0, 0, 0);
       }
       if (envTex) envTex.needsUpdate = true;

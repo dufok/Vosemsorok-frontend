@@ -105,31 +105,30 @@ body {
 
 /* ssory · LOGO · again? */
 .hero-top {
+  position: relative;
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: clamp(8px, 3vw, 48px);
 }
 .hero-logo3d {
-  width: min(720px, 56vw);
-  height: min(400px, 32vw);
+  width: min(1200px, 92vw);
+  height: min(560px, 44vw);
   display: block;
   pointer-events: none;
-  flex: 0 0 auto;
 }
 .glitch {
+  position: absolute;
+  z-index: 2;
   font-family: 'VT323', monospace;
-  font-size: clamp(36px, 6vw, 70px);
+  font-size: clamp(40px, 6.5vw, 76px);
   line-height: 1;
   color: var(--hero-fg);
-  flex: 0 0 auto;
 }
-.glitch--accent { align-self: flex-end;   margin-bottom: 6%; }
-.glitch--dim    { align-self: flex-start; margin-top: 6%; opacity: 0.55; }
+.glitch--accent { left: 3%;  bottom: 16%; }
+.glitch--dim    { right: 3%; top: 8%; opacity: 0.55; }
 
 /* manifest sits on a bg-coloured plate so it reads over the dots */
 .hero-manifest-band {
-  background: var(--ascii-bg);
+  background: color-mix(in srgb, var(--ascii-bg) 62%, transparent);
   margin-inline: calc(-1 * var(--hero-pad));
   padding: 26px var(--hero-pad);
 }
@@ -374,9 +373,9 @@ body.dark {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1.5px solid var(--text);
-  background: var(--bg);
-  color: var(--text);
+  border: 1.5px solid #0A0A0A;
+  background: var(--accent);
+  color: #0A0A0A;
   font-family: 'ModeNine', monospace;
   font-size: 0.6rem;
   letter-spacing: 0.05em;
@@ -388,8 +387,8 @@ body.dark {
   transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 .theme-toggle:hover {
-  background: var(--text);
-  color: var(--bg);
+  background: #0A0A0A;
+  color: var(--accent);
 }
 
 
