@@ -145,11 +145,12 @@ body {
 
 .hero-row {
   display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
+  flex-direction: column;       /* contact (actions) always above the marquee */
+  align-items: stretch;
+  gap: 16px;
 }
 .hero-actions {
+  order: -1;                    /* above the marquee, any layout */
   display: flex;
   align-items: center;
   gap: 20px;
@@ -175,8 +176,8 @@ body {
 .contact-pill:hover { background: var(--pill-line); color: var(--ascii-bg); }
 
 .marquee-pill {
-  flex: 1 1 460px;
-  min-width: 240px;
+  flex: 0 0 auto;
+  min-width: 0;
   overflow: hidden;
   padding: 0;
   cursor: default;
@@ -425,15 +426,8 @@ body.dark {
   .project-role { font-size: 1rem; }
 }
 
-/* ── Hero on narrow / mobile ─────────────────────── */
-@media (max-width: 640px) {
-  .hero-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-  .hero-actions { order: -1; }          /* contact me above the marquee */
-  .marquee-pill { flex: 1 1 auto; min-width: 0; }
+/* ── Shorter manifest from medium width down ─────── */
+@media (max-width: 1000px) {
   .hero-manifest--full  { display: none; }
   .hero-manifest--short { display: block; }
 }

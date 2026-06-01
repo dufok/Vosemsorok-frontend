@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { bgState } from '../lib/bgState';
 
 /**
  * Crisp 3D BADPROMT logo (logo.glb) — the hero centerpiece.
@@ -11,7 +12,6 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const BASE = { x: 10, y: -83, z: 1 };
 const D2R = Math.PI / 180;
 const ENV_ZOOM = 3.4;      // bigger reflected dots
-const ENV_PAN = 0;         // 0 → reflection mirrors the live bg only (turns with it)
 
 export function Logo3D() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -96,18 +96,14 @@ export function Logo3D() {
     window.addEventListener('mousemove', onMove);
 
     let raf = 0;
-    let lastT = performance.now();
-    const frame = (now: number) => {
-      const dt = now - lastT;
-      lastT = now;
-
-      // update reflection env from a zoomed, panning crop of the live bg
+    const frame = () => {
+      // reflection env = zoomed crop of the live bg, panned in sync with the bg rotation
       if (!bgCanvas) bgCanvas = document.getElementById('ascii-bg-canvas') as HTMLCanvasElement | null;
       if (envCtx && bgCanvas && bgCanvas.width > 0) {
         const sw = bgCanvas.width / ENV_ZOOM;
         const sh = bgCanvas.height / ENV_ZOOM;
         const range = Math.max(1, bgCanvas.width - sw);
-        pan = (pan + dt * ENV_PAN) % range;
+        pan = (((bgState.rotationY / (Math.PI * 2)) * range) % range + range) % range;
         envCtx.drawImage(bgCanvas, pan, (bgCanvas.height - sh) / 2, sw, sh, 0, 0, envCanvas.width, envCanvas.height);
         envTex.needsUpdate = true;
       }

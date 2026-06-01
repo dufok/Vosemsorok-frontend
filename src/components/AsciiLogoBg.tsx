@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { bgState } from '../lib/bgState';
 
 /**
  * Interactive ASCII logo background.
@@ -136,6 +137,7 @@ export function AsciiLogoBg() {
           pivot.rotation.x += (target.x - pivot.rotation.x) * 0.09;
           pivot.rotation.y += (target.y - pivot.rotation.y) * 0.09;
         }
+        bgState.rotationY = pivot.rotation.y;   // publish for the chrome logo reflection
         const dist = fitDist * (1.2 - 1.08 * DOLLY);
         camera.position.set(0, 0, dist);
         camera.lookAt(0, 0, 0);
