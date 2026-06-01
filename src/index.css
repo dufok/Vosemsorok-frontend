@@ -123,8 +123,8 @@ body {
   line-height: 1;
   color: var(--hero-fg);
 }
-.glitch--accent { left: 21%;  bottom: 14%; }
-.glitch--dim    { right: 21%; top: 10%; opacity: 0.55; }
+.glitch--accent { left: 13%;  top: 58%; }
+.glitch--dim    { right: 14%; top: 6%; opacity: 0.55; }
 
 /* manifest sits on a bg-coloured plate so it reads over the dots */
 .hero-manifest-band {

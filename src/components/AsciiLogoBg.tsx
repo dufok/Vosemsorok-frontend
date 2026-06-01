@@ -13,7 +13,8 @@ const BASE = { x: 10, y: -83, z: 1 };        // baked logo orientation (deg)
 const CELL = 10;                              // glyph cell size (px)
 const DOLLY = 1.0;                            // camera dolly (0..1), 1 = very close
 const DRIFT = 0.12;                           // idle rotation speed (rad/s)
-const IDLE_MS = 1400;
+const IDLE_MS = 4000;                         // wait before idle spin starts
+const RAMP_MS = 1800;                         // soft ease-in of the idle spin
 const ROT_X = 0.4, ROT_Y = 0.6;               // mouse rotation range (rad)
 const D2R = Math.PI / 180;
 
@@ -122,8 +123,11 @@ export function AsciiLogoBg() {
       lastT = now;
 
       if (ready && rt && buf) {
-        if (now - lastMove > IDLE_MS) {
-          pivot.rotation.y += DRIFT * (dt / 1000);
+        const sinceMove = now - lastMove;
+        if (sinceMove > IDLE_MS) {
+          const ramp = Math.min(1, (sinceMove - IDLE_MS) / RAMP_MS);
+          const eased = ramp * ramp * (3 - 2 * ramp);   // smoothstep — soft start
+          pivot.rotation.y += DRIFT * eased * (dt / 1000);
           pivot.rotation.x += (0 - pivot.rotation.x) * 0.04;
         } else {
           let yy = pivot.rotation.y;

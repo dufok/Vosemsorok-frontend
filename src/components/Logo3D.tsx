@@ -11,7 +11,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const BASE = { x: 10, y: -83, z: 1 };
 const D2R = Math.PI / 180;
 const ENV_ZOOM = 3.4;      // bigger reflected dots
-const ENV_PAN = 0.05;      // px/ms — reflection streams even when bg is calm
+const ENV_PAN = 0;         // 0 → reflection mirrors the live bg only (turns with it)
 
 export function Logo3D() {
   const ref = useRef<HTMLCanvasElement>(null);
