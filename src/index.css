@@ -32,6 +32,9 @@
   --photo-h:       420px;
   --gap:           5px;
   --overview-w:    640px;
+  /* BADPROMT ascii background — day */
+  --ascii-bg:      #FF8A00;
+  --ascii-fg:      #0A0A0A;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -218,6 +221,19 @@ body.dark {
   --text:          #e8e3da;
   --text-dim:      #6b6560;
   --timeline-line: #e8e3da;
+  --ascii-bg:      #0A0A0A;
+  --ascii-fg:      #FF8A00;
+}
+
+/* ── ASCII Logo Background ───────────────────────── */
+.ascii-logo-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;          /* behind all content, above body bg */
+  pointer-events: none;
+  display: block;
 }
 
 /* ── Theme Toggle Button ────────────────────────── */
@@ -254,6 +270,8 @@ body.dark {
     --text:          #e8e3da;
     --text-dim:      #6b6560;
     --timeline-line: #e8e3da;
+    --ascii-bg:      #0A0A0A;
+    --ascii-fg:      #FF8A00;
   }
 }
 
