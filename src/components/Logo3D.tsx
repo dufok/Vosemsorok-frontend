@@ -1,17 +1,15 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { bgState } from '../lib/bgState';
 
 /**
  * Crisp 3D BADPROMT logo (logo.glb) — the hero centerpiece.
- * Chrome-mirror material. Its environment map is a zoomed, slowly-panning crop
- * of the live ASCII background canvas, so the chrome shows big reflected dots
- * that move with the rotating background. The logo turns toward the mouse.
+ * Matte brand-orange material (no environment reflections); its 3D form reads
+ * through directional lighting. Gently turns toward the mouse.
  */
 const BASE = { x: 10, y: -83, z: 1 };
 const D2R = Math.PI / 180;
-const ENV_ZOOM = 3.4;      // bigger reflected dots
+const LOGO_COLOR = 0xff8a00;
 
 export function Logo3D() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -25,21 +23,13 @@ export function Logo3D() {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-    const d1 = new THREE.DirectionalLight(0xffffff, 1.1);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const d1 = new THREE.DirectionalLight(0xffffff, 1.4);
     d1.position.set(2, 3, 4);
     scene.add(d1);
-
-    // environment = zoomed/panning crop of the live ascii bg → chunky, moving reflection
-    const envCanvas = document.createElement('canvas');
-    envCanvas.width = 512;
-    envCanvas.height = 256;
-    const envCtx = envCanvas.getContext('2d');
-    const envTex = new THREE.CanvasTexture(envCanvas);
-    envTex.mapping = THREE.EquirectangularReflectionMapping;
-    envTex.colorSpace = THREE.SRGBColorSpace;
-    let bgCanvas = document.getElementById('ascii-bg-canvas') as HTMLCanvasElement | null;
-    let pan = 0;
+    const d2 = new THREE.DirectionalLight(0xffffff, 0.45);
+    d2.position.set(-3, -1, 2);
+    scene.add(d2);
 
     const pivot = new THREE.Group();
     scene.add(pivot);
@@ -60,18 +50,10 @@ export function Logo3D() {
     new GLTFLoader().load(`${import.meta.env.BASE_URL}logo.glb`, (gltf) => {
       if (disposed) return;
       const model = gltf.scene;
+      const mat = new THREE.MeshStandardMaterial({ color: LOGO_COLOR, metalness: 0, roughness: 0.55 });
       model.traverse((o) => {
         const mesh = o as THREE.Mesh;
-        if (!mesh.isMesh) return;
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        mats.forEach((m) => {
-          const sm = m as THREE.MeshStandardMaterial;
-          sm.envMap = envTex;
-          sm.metalness = 1.0;        // full chrome mirror
-          sm.roughness = 0.05;       // sharp reflection of the bg
-          sm.envMapIntensity = 1.7;
-          sm.needsUpdate = true;
-        });
+        if (mesh.isMesh) mesh.material = mat;
       });
       const box = new THREE.Box3().setFromObject(model);
       model.position.sub(box.getCenter(new THREE.Vector3()));
@@ -97,17 +79,6 @@ export function Logo3D() {
 
     let raf = 0;
     const frame = () => {
-      // reflection env = zoomed crop of the live bg, panned in sync with the bg rotation
-      if (!bgCanvas) bgCanvas = document.getElementById('ascii-bg-canvas') as HTMLCanvasElement | null;
-      if (envCtx && bgCanvas && bgCanvas.width > 0) {
-        const sw = bgCanvas.width / ENV_ZOOM;
-        const sh = bgCanvas.height / ENV_ZOOM;
-        const range = Math.max(1, bgCanvas.width - sw);
-        pan = (((bgState.rotationY / (Math.PI * 2)) * range) % range + range) % range;
-        envCtx.drawImage(bgCanvas, pan, (bgCanvas.height - sh) / 2, sw, sh, 0, 0, envCanvas.width, envCanvas.height);
-        envTex.needsUpdate = true;
-      }
-
       if (ready) {
         pivot.rotation.x += (target.x - pivot.rotation.x) * 0.08;
         pivot.rotation.y += (target.y - pivot.rotation.y) * 0.08;
@@ -124,7 +95,6 @@ export function Logo3D() {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', size);
       window.removeEventListener('mousemove', onMove);
-      envTex.dispose();
       renderer.dispose();
     };
   }, []);
