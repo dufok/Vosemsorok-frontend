@@ -35,7 +35,9 @@ export function Logo3D() {
       envTex = new THREE.CanvasTexture(bgCanvas);
       envTex.mapping = THREE.EquirectangularReflectionMapping;
       envTex.colorSpace = THREE.SRGBColorSpace;
-      scene.environment = envTex;
+      // NOTE: assigned per-material as envMap (not scene.environment) so that
+      // texture.needsUpdate each frame keeps the reflection live (scene.environment
+      // gets PMREM-cached and would look static).
     }
 
     const pivot = new THREE.Group();
@@ -63,6 +65,7 @@ export function Logo3D() {
         const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
         mats.forEach((m) => {
           const sm = m as THREE.MeshStandardMaterial;
+          if (envTex) sm.envMap = envTex;
           sm.metalness = 1.0;        // full chrome mirror
           sm.roughness = 0.05;       // sharp reflection of the bg
           sm.envMapIntensity = 1.7;
@@ -96,7 +99,7 @@ export function Logo3D() {
       if (ready) {
         pivot.rotation.x += (target.x - pivot.rotation.x) * 0.08;
         pivot.rotation.y += (target.y - pivot.rotation.y) * 0.08;
-        camera.position.set(0, 0, fitDist * 0.75);
+        camera.position.set(0, 0, fitDist * 0.68);
         camera.lookAt(0, 0, 0);
       }
       if (envTex) envTex.needsUpdate = true;
