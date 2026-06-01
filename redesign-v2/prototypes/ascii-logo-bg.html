@@ -5,15 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>BADPROMT — interactive ASCII logo background</title>
 <style>
-  :root{ --bg:#0A0A0A; --amber1:#FF8A00; --amber2:#FFB000; --text:#F5F5F0; --dim:#8A8A82; }
+  :root{ --amber1:#FF8A00; --amber2:#FFB000; --ink:#0A0A0A; --text:#F5F5F0; --dim:#8A8A82; }
   *{ box-sizing:border-box; margin:0; padding:0; }
-  html,body{ height:100%; background:var(--bg); overflow:hidden; cursor:crosshair; }
+  html,body{ height:100%; overflow:hidden; cursor:crosshair; background:#0A0A0A; }
   #scene{ position:fixed; inset:0; width:100vw; height:100vh; display:block; }
   #gl{ display:none; }
   #panel{ position:fixed; left:16px; bottom:16px; z-index:10; width:300px; padding:14px 16px;
     border:1px solid var(--amber1); border-radius:14px; background:rgba(10,10,10,.72); backdrop-filter:blur(6px);
     font:13px/1.4 ui-monospace,"Cascadia Code",Menlo,monospace; color:var(--text); }
-  #panel h1{ font-size:12px; letter-spacing:.12em; color:var(--amber2); margin-bottom:10px; text-transform:uppercase; }
+  #panel h1{ font-size:12px; letter-spacing:.12em; color:var(--amber2); margin-bottom:10px; text-transform:uppercase; display:flex; justify-content:space-between; }
+  #themeBtn{ cursor:pointer; border:1px solid var(--amber1); border-radius:8px; background:transparent; color:var(--amber2);
+    font:inherit; font-size:11px; padding:2px 8px; }
   .row{ margin:10px 0; } .row label{ display:flex; justify-content:space-between; color:var(--dim); margin-bottom:4px; }
   .row label b{ color:var(--text); font-weight:600; } input[type=range]{ width:100%; accent-color:var(--amber1); }
   #hud{ position:fixed; right:16px; top:16px; z-index:10; font:12px/1.5 ui-monospace,monospace; color:var(--dim); text-align:right; }
@@ -32,20 +34,23 @@
 <canvas id="gl"></canvas>
 <div id="err"></div>
 <div id="hud">
-  <div>mouse <b id="hMouse">0.00, 0.00</b></div>
+  <div>mode <b id="hMode">idle</b></div>
+  <div>theme <b id="hTheme">night</b></div>
   <div>dolly <b id="hZoom">0%</b></div>
-  <div>charset <b id="hSet">blocks</b></div>
+  <div>glyph <b id="hSet">square</b></div>
   <div>fps <b id="hFps">0</b></div>
 </div>
 <div id="panel">
-  <h1>ASCII logo bg · v2</h1>
-  <div class="row"><label>vertical (camera dolly) <b id="vVal">0.50</b></label>
-    <input id="vert" type="range" min="0" max="1" step="0.001" value="0.50"></div>
-  <div class="row"><label>horizontal (charset) <b id="hVal">0.66</b></label>
-    <input id="horiz" type="range" min="0" max="1" step="0.001" value="0.66"></div>
-  <div class="row"><label>flicker <b id="fVal">2.0%</b></label>
-    <input id="flick" type="range" min="0" max="0.12" step="0.005" value="0.02"></div>
-  <div class="hint">move mouse → logo turns · drag vertical → dolly in · ?debug=1</div>
+  <h1><span>ASCII logo bg · v5</span><button id="themeBtn">day/night</button></h1>
+  <div class="row"><label>vertical (camera dolly) <b id="vVal">1.00</b></label>
+    <input id="vert" type="range" min="0" max="1" step="0.001" value="1.0"></div>
+  <div class="row"><label>horizontal (glyph) <b id="hVal">0.25</b></label>
+    <input id="horiz" type="range" min="0" max="1" step="0.001" value="0.25"></div>
+  <div class="row"><label>cell size <b id="cVal">10</b></label>
+    <input id="cell" type="range" min="8" max="36" step="1" value="10"></div>
+  <div class="row"><label>flicker <b id="fVal">0.0%</b></label>
+    <input id="flick" type="range" min="0" max="0.12" step="0.005" value="0"></div>
+  <div class="hint">idle → logo slowly rotates · move mouse → logo follows · button / key T = day/night</div>
 </div>
 
 <script type="module">
@@ -56,23 +61,24 @@ const $ = s => document.querySelector(s);
 const P = new URLSearchParams(location.search);
 const DEBUG = P.get("debug")==="1";
 const STILL = P.get("still")==="1";
+if(P.get("clean")==="1"){ for(const id of ["panel","hud","err"]){ const el=document.getElementById(id); if(el) el.style.display="none"; } }
 const D2R = Math.PI/180;
 const showErr = m => { $("#err").textContent = m; };
 
-// baked base orientation (calibrated 2026-05-31)
 const BASE = { x:10, y:-83, z:1 };
+const THEMES = { night:{ bg:"#0A0A0A", fg:"#FF8A00" }, day:{ bg:"#FF8A00", fg:"#0A0A0A" } };
+let theme = P.get("theme")==="day" ? "day" : "night";
 
-const FONT = 13, CELLW = FONT*0.6, CELLH = FONT;
-const SETS = [
-  { name:"blocks",  chars:" .:-=+*#%@" },
-  { name:"digits",  chars:" 1742305689" },
-  { name:"letters", chars:" il:ctsavoengOMW" },
-  { name:"symbols", chars:" ·.:;!?*+%#@" },
+const GLYPHS = [
+  { name:"square",  draw:(x,y,s)=>ctx.fillRect(x-s/2,y-s/2,s,s) },
+  { name:"dot",     draw:(x,y,s)=>{ ctx.beginPath(); ctx.arc(x,y,s/2,0,6.2832); ctx.fill(); } },
+  { name:"diamond", draw:(x,y,s)=>{ ctx.beginPath(); ctx.moveTo(x,y-s/2); ctx.lineTo(x+s/2,y); ctx.lineTo(x,y+s/2); ctx.lineTo(x-s/2,y); ctx.closePath(); ctx.fill(); } },
+  { name:"plus",    draw:(x,y,s)=>{ const t=s/3; ctx.fillRect(x-s/2,y-t/2,s,t); ctx.fillRect(x-t/2,y-s/2,t,s); } },
 ];
-const baseHue=32, hueAmp=7;
+const glyphFor = h => GLYPHS[Math.round(h*(GLYPHS.length-1))];
 
 const cv=$("#scene"), ctx=cv.getContext("2d",{alpha:false});
-let W=0,H=0,cols=0,rows=0;
+let W=0,H=0,CELL=17,cols=0,rows=0;
 
 const renderer = new THREE.WebGLRenderer({ canvas:$("#gl"), antialias:false });
 renderer.setPixelRatio(1); renderer.setClearColor(0x000000, 1);
@@ -82,14 +88,12 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.40));
 const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(1.2,1.6,2.2); scene.add(key);
 const rim = new THREE.DirectionalLight(0xffffff, 0.55); rim.position.set(-1.5,-0.6,-1.0); scene.add(rim);
 
-const pivot = new THREE.Group(); scene.add(pivot);     // mouse rotation
-const holder = new THREE.Group(); pivot.add(holder);   // baked base orientation
-holder.rotation.set(BASE.x*D2R, BASE.y*D2R, BASE.z*D2R);
+const pivot = new THREE.Group(); scene.add(pivot);      // mouse + idle rotation
 let rt=null, buf=null, fitDist=4, ready=false;
 
 function buildRT(){
   W=cv.clientWidth; H=cv.clientHeight; cv.width=W; cv.height=H;
-  cols=Math.max(8,Math.ceil(W/CELLW)); rows=Math.max(8,Math.ceil(H/CELLH));
+  cols=Math.max(8,Math.ceil(W/CELL)); rows=Math.max(8,Math.ceil(H/CELL));
   if(rt) rt.dispose();
   rt=new THREE.WebGLRenderTarget(cols,rows,{depthBuffer:true});
   buf=new Uint8Array(cols*rows*4);
@@ -103,29 +107,43 @@ new GLTFLoader().load("../GRAPHICS/logo.glb",
     const model=gltf.scene;
     const mat=new THREE.MeshStandardMaterial({ color:0xffffff, metalness:0.0, roughness:0.7 });
     model.traverse(o=>{ if(o.isMesh) o.material=mat; });
-    const box=new THREE.Box3().setFromObject(model);
-    const center=box.getCenter(new THREE.Vector3());
-    model.position.sub(center);
-    holder.add(model);
-    const sph=box.getBoundingSphere(new THREE.Sphere());
-    fitDist = sph.radius / Math.sin(THREE.MathUtils.degToRad(camera.fov/2));
+    // one base-oriented, centered unit
+    const unit=new THREE.Group();
+    const box0=new THREE.Box3().setFromObject(model);
+    model.position.sub(box0.getCenter(new THREE.Vector3()));
+    unit.add(model);
+    unit.rotation.set(BASE.x*D2R, BASE.y*D2R, BASE.z*D2R);
+    unit.updateMatrixWorld(true);
+    const box=new THREE.Box3().setFromObject(unit);
+    fitDist = box.getBoundingSphere(new THREE.Sphere()).radius / Math.sin(THREE.MathUtils.degToRad(camera.fov/2));
+    pivot.add(unit);
     ready=true;
   }, undefined, (e)=>showErr("glb load error: "+(e&&e.message||e)));
 
-const vert=$("#vert"),horiz=$("#horiz"),flick=$("#flick");
+const vert=$("#vert"),horiz=$("#horiz"),flick=$("#flick"),cellS=$("#cell");
 if(P.has("v")) vert.value=P.get("v");
 if(P.has("h")) horiz.value=P.get("h");
 if(STILL) flick.value="0";
-function sync(){ $("#vVal").textContent=(+vert.value).toFixed(2); $("#hVal").textContent=(+horiz.value).toFixed(2); $("#fVal").textContent=(flick.value*100).toFixed(1)+"%"; }
-[vert,horiz,flick].forEach(e=>e.addEventListener("input",sync)); sync();
+function sync(){
+  $("#vVal").textContent=(+vert.value).toFixed(2); $("#hVal").textContent=(+horiz.value).toFixed(2);
+  $("#fVal").textContent=(flick.value*100).toFixed(1)+"%"; $("#cVal").textContent=cellS.value;
+}
+[vert,horiz,flick].forEach(e=>e.addEventListener("input",sync));
+cellS.addEventListener("input",()=>{ CELL=+cellS.value; buildRT(); sync(); });
+sync();
 
-const target={x:0,y:0}, ROT_X=0.38, ROT_Y=0.55;
+function setTheme(t){ theme=t; $("#hTheme").textContent=t; }
+$("#themeBtn").addEventListener("click",()=>setTheme(theme==="night"?"day":"night"));
+addEventListener("keydown",e=>{ if(e.key==="t"||e.key==="T") setTheme(theme==="night"?"day":"night"); });
+setTheme(theme);
+
+const ROT_X=0.40, ROT_Y=0.60, IDLE_MS=1400, DRIFT=0.12;  // DRIFT rad/s — slow idle spin
+let lastMove=-1e9, target={x:0,y:0};
 addEventListener("mousemove",e=>{
+  lastMove=performance.now();
   const nx=(e.clientX/innerWidth)*2-1, ny=(e.clientY/innerHeight)*2-1;
   target.y=nx*ROT_Y; target.x=ny*ROT_X;
-  $("#hMouse").textContent=nx.toFixed(2)+", "+ny.toFixed(2);
 });
-const charsetFor=h=>SETS[Math.round(h*(SETS.length-1))];
 
 let lastT=performance.now(),frames=0,fpsT=0;
 function frame(now){
@@ -133,39 +151,43 @@ function frame(now){
   if(fpsT>=500){ $("#hFps").textContent=Math.round(frames/(fpsT/1000)); frames=0; fpsT=0; }
 
   if(ready){
-    pivot.rotation.x += (target.x-pivot.rotation.x)*0.09;
-    pivot.rotation.y += (target.y-pivot.rotation.y)*0.09;
+    const idle=(now-lastMove)>IDLE_MS;
+    $("#hMode").textContent = idle ? "idle · spin" : "follow";
+    if(idle){
+      pivot.rotation.y += DRIFT*(dt/1000);            // slow idle rotation
+      pivot.rotation.x += (0-pivot.rotation.x)*0.04;
+    } else {
+      let y=pivot.rotation.y; y=((y+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI; pivot.rotation.y=y;
+      pivot.rotation.x += (target.x-pivot.rotation.x)*0.09;
+      pivot.rotation.y += (target.y-pivot.rotation.y)*0.09;
+    }
     const v=+vert.value;
-    const dist=fitDist*(1.15-0.80*v);
+    const dist=fitDist*(1.20-1.08*v);     // wider range → very close at v→1
     camera.position.set(0,0,dist); camera.lookAt(0,0,0);
     $("#hZoom").textContent=Math.round(v*100)+"%";
     renderer.setRenderTarget(rt); renderer.render(scene,camera);
     renderer.readRenderTargetPixels(rt,0,0,cols,rows,buf); renderer.setRenderTarget(null);
   }
 
-  const h=+horiz.value, fl=STILL?0:+flick.value;
-  const set=charsetFor(h), chars=set.chars, nC=chars.length;
-  $("#hSet").textContent=set.name;
-  const hue=baseHue+hueAmp*Math.sin(now/2600);
-  ctx.fillStyle="#0A0A0A"; ctx.fillRect(0,0,W,H);
+  const th=THEMES[theme];
+  const fl=STILL?0:+flick.value, g=glyphFor(+horiz.value);
+  $("#hSet").textContent=g.name;
 
+  ctx.fillStyle=th.bg; ctx.fillRect(0,0,W,H);
   if(DEBUG){
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
       const sr=rows-1-r, i=(sr*cols+c)*4; const l=buf?buf[i]:0; if(l<6)continue;
-      ctx.fillStyle=`rgb(${l},${(l*0.55)|0},0)`; ctx.fillRect(c*CELLW,r*CELLH,CELLW,CELLH);
+      ctx.fillStyle=`rgb(${l},${(l*0.55)|0},0)`; ctx.fillRect(c*CELL,r*CELL,CELL,CELL);
     }
   } else {
-    ctx.font=`${FONT}px ui-monospace,"Cascadia Code",Menlo,monospace`; ctx.textBaseline="top";
+    ctx.fillStyle=th.fg;
+    const half=CELL/2, maxS=CELL*1.06;
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
       const sr=rows-1-r, i=(sr*cols+c)*4;
-      const lum=buf?(buf[i]*0.299+buf[i+1]*0.587+buf[i+2]*0.114)/255:0;
-      let ch;
-      if(fl>0 && Math.random()<fl) ch=chars[(Math.random()*nC)|0];
-      else ch=chars[Math.min(nC-1,(lum*(nC-1)+0.5)|0)];
-      if(ch===" ") continue;
-      const L=8+lum*62;
-      ctx.fillStyle=`hsl(${hue} 100% ${L}%)`;
-      ctx.fillText(ch,c*CELLW,r*CELLH);
+      let b = buf?(buf[i]*0.299+buf[i+1]*0.587+buf[i+2]*0.114)/255:0;
+      if(fl>0 && Math.random()<fl) b=Math.random();
+      const s=b*maxS; if(s<0.8) continue;
+      g.draw(c*CELL+half, r*CELL+half, s);
     }
   }
   requestAnimationFrame(frame);
