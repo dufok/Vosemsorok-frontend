@@ -9,6 +9,9 @@ const MANIFEST =
   "project, for your chance to move people through the way space and culture are felt. I'd rather spend " +
   "a little light making something true than a flood of it making noise. We imagine it together. You build it.";
 
+const MANIFEST_SHORT =
+  "My carbon footprint is smaller than the thousand tokens burned on images you'd never love.";
+
 const MARQUEE = '·  BADPROMT  ·  STEPAN VLADOVSKII  ·  VISUALIZER  ·  3D DESIGNER  ';
 
 function ContactPopup({ onClose }: { onClose: () => void }) {
@@ -30,13 +33,12 @@ export function Header() {
   return (
     <header className="hero">
       <div className="hero-top">
-        <span className="glitch glitch--accent">ssory</span>
         <Logo3D />
-        <span className="glitch glitch--dim">again?</span>
       </div>
 
       <div className="hero-manifest-band">
-        <p className="hero-manifest">{MANIFEST}</p>
+        <p className="hero-manifest hero-manifest--full">{MANIFEST}</p>
+        <p className="hero-manifest hero-manifest--short">{MANIFEST_SHORT}</p>
       </div>
 
       <div className="hero-row">
@@ -46,11 +48,13 @@ export function Header() {
             <span>{MARQUEE}</span>
           </div>
         </div>
-        <button className="pill contact-pill" onClick={() => setContactOpen(true)}>
-          contact me
-        </button>
-        {/* decorative pill — easter egg: click opens 404 (wired in a later pass) */}
-        <a className="pill decor-pill" href="/404" aria-label="?" />
+        <div className="hero-actions">
+          <button className="pill contact-pill" onClick={() => setContactOpen(true)}>
+            contact me
+          </button>
+          {/* decorative pill — easter egg: click opens 404 (wired in a later pass) */}
+          <a className="pill decor-pill" href="/404" aria-label="?" />
+        </div>
       </div>
 
       {contactOpen && <ContactPopup onClose={() => setContactOpen(false)} />}
