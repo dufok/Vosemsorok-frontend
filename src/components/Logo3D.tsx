@@ -4,12 +4,27 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
  * Crisp 3D BADPROMT logo (logo.glb) — the hero centerpiece.
- * Matte brand-orange material (no environment reflections); its 3D form reads
- * through directional lighting. Gently turns toward the mouse.
+ * Chrome material, but the environment is a static orange gradient, so the
+ * mirror reflects pure brand-orange (no background dots). Turns toward the mouse.
  */
 const BASE = { x: 10, y: -83, z: 1 };
 const D2R = Math.PI / 180;
-const LOGO_COLOR = 0xff8a00;
+
+function orangeEnv() {
+  const c = document.createElement('canvas');
+  c.width = 16; c.height = 256;
+  const x = c.getContext('2d')!;
+  const g = x.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, '#FFC061');
+  g.addColorStop(0.5, '#FF8A00');
+  g.addColorStop(1, '#7A3D00');
+  x.fillStyle = g;
+  x.fillRect(0, 0, 16, 256);
+  const t = new THREE.CanvasTexture(c);
+  t.mapping = THREE.EquirectangularReflectionMapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
 
 export function Logo3D() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -31,6 +46,8 @@ export function Logo3D() {
     d2.position.set(-3, -1, 2);
     scene.add(d2);
 
+    const envMap = orangeEnv();
+
     const pivot = new THREE.Group();
     scene.add(pivot);
     let fitDist = 4;
@@ -50,7 +67,9 @@ export function Logo3D() {
     new GLTFLoader().load(`${import.meta.env.BASE_URL}logo.glb`, (gltf) => {
       if (disposed) return;
       const model = gltf.scene;
-      const mat = new THREE.MeshStandardMaterial({ color: LOGO_COLOR, metalness: 0, roughness: 0.55 });
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0xffffff, metalness: 1.0, roughness: 0.12, envMap, envMapIntensity: 1.15,
+      });
       model.traverse((o) => {
         const mesh = o as THREE.Mesh;
         if (mesh.isMesh) mesh.material = mat;
@@ -95,6 +114,7 @@ export function Logo3D() {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', size);
       window.removeEventListener('mousemove', onMove);
+      envMap.dispose();
       renderer.dispose();
     };
   }, []);

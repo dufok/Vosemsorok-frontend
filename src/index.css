@@ -36,6 +36,7 @@
   --ascii-bg:      #FF8A00;
   --ascii-fg:      #0A0A0A;
   --hero-fg:       #F5F5F0;   /* display text (white, both themes) */
+  --manifest-fg:   #0A0A0A;   /* manifest — black on the day plate */
   --pill-line:     #0A0A0A;   /* pill outline — day */
   --accent:        #FF8A00;
 }
@@ -111,9 +112,10 @@ body {
 }
 .hero-logo3d {
   width: min(1200px, 92vw);
-  height: min(480px, 34vw);
+  height: min(380px, 28vw);
   display: block;
   pointer-events: none;
+  margin-bottom: -8px;
 }
 .glitch {
   position: absolute;
@@ -140,7 +142,7 @@ body {
   font-family: 'Cascadia Code', 'Courier New', monospace;
   font-size: clamp(14px, 1.4vw, 18px);
   line-height: 1.6;
-  color: var(--hero-fg);
+  color: var(--manifest-fg);
 }
 
 .hero-row {
@@ -358,6 +360,7 @@ body.dark {
   --ascii-bg:      #0A0A0A;
   --ascii-fg:      #FF8A00;
   --hero-fg:       #F5F5F0;
+  --manifest-fg:   #F5F5F0;   /* manifest — light on the night plate */
   --pill-line:     #FF8A00;   /* pill outline — night (amber) */
 }
 
@@ -409,6 +412,7 @@ body.dark {
     --ascii-bg:      #0A0A0A;
     --ascii-fg:      #FF8A00;
     --hero-fg:       #F5F5F0;
+    --manifest-fg:   #F5F5F0;
     --pill-line:     #FF8A00;
   }
 }
