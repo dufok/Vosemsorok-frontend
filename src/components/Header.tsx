@@ -1,0 +1,55 @@
+import { useState } from 'react';
+
+const MANIFEST =
+  "My carbon footprint is smaller than the thousand tokens burned on images you'd never love. " +
+  "I don't charge for revisions; I work for the beauty of it. I'm no saint — I run my own servers, " +
+  "I work with AI, I buy tokens like a one-man corporation — but I'm learning to spend less and waste " +
+  "nothing, for the glaciers, for the animals, for a planet worth the light. I'm for beauty, for your " +
+  "project, for your chance to move people through the way space and culture are felt. I'd rather spend " +
+  "a little light making something true than a flood of it making noise. We imagine it together. You build it.";
+
+const MARQUEE = '·  BADPROMT  ·  STEPAN VLADOVSKII  ·  VISUALIZER  ·  3D DESIGNER  ';
+
+function ContactPopup({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="contact-overlay" onClick={onClose}>
+      <div className="contact-card" onClick={(e) => e.stopPropagation()}>
+        <button className="contact-close" onClick={onClose} aria-label="close">×</button>
+        <a className="contact-link" href="https://t.me/" target="_blank" rel="noreferrer">Telegram</a>
+        <a className="contact-link" href="https://wa.me/" target="_blank" rel="noreferrer">WhatsApp</a>
+        <a className="contact-link" href="mailto:stepan.vladovskiy@gmail.com">Email</a>
+      </div>
+    </div>
+  );
+}
+
+export function Header() {
+  const [contactOpen, setContactOpen] = useState(false);
+
+  return (
+    <header className="hero">
+      <div className="hero-glitch">
+        <span className="glitch glitch--accent">ssory</span>
+        <span className="glitch glitch--dim">again?</span>
+      </div>
+
+      <p className="hero-manifest">{MANIFEST}</p>
+
+      <div className="hero-row">
+        <div className="pill marquee-pill" aria-hidden="true">
+          <div className="marquee-pill-track">
+            <span>{MARQUEE}</span>
+            <span>{MARQUEE}</span>
+          </div>
+        </div>
+        <button className="pill contact-pill" onClick={() => setContactOpen(true)}>
+          contact me
+        </button>
+        {/* decorative pill — easter egg: click opens 404 (wired in a later pass) */}
+        <a className="pill decor-pill" href="/404" aria-label="?" />
+      </div>
+
+      {contactOpen && <ContactPopup onClose={() => setContactOpen(false)} />}
+    </header>
+  );
+}

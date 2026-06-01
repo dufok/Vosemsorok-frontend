@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AsciiLogoBg } from './components/AsciiLogoBg';
-import { MarqueeHeader } from './components/MarqueeHeader';
+import { Header } from './components/Header';
 import { Timeline } from './components/Timeline';
 import { fetchProjects } from './api/client';
 import type { Project } from './types';
@@ -41,7 +41,7 @@ export default function App() {
   return (
     <div className="app">
       <AsciiLogoBg />
-      <MarqueeHeader />
+      <Header />
       <main className="main">
         {loading && <p className="status">…</p>}
         {error   && <p className="status error">{error}</p>}
