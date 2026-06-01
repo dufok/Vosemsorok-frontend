@@ -92,32 +92,53 @@ body {
 
 /* ── Hero header (BADPROMT) ─────────────────────── */
 .hero {
+  --hero-pad: clamp(24px, 6vw, 110px);
   position: relative;
   z-index: 1;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 40px;
-  padding: 64px clamp(24px, 6vw, 110px);
+  gap: 36px;
+  padding: 56px var(--hero-pad);
 }
-.hero-glitch {
+
+/* ssory · LOGO · again? */
+.hero-top {
   display: flex;
   align-items: center;
-  gap: clamp(40px, 12vw, 220px);
-  font-family: 'VT323', monospace;
-  font-size: clamp(40px, 7vw, 72px);
-  line-height: 1;
+  justify-content: center;
+  gap: clamp(8px, 3vw, 48px);
 }
-.glitch--accent { color: var(--hero-fg); }
-.glitch--dim    { color: var(--hero-fg); opacity: 0.55; }
+.hero-logo3d {
+  width: min(720px, 56vw);
+  height: min(400px, 32vw);
+  display: block;
+  pointer-events: none;
+  flex: 0 0 auto;
+}
+.glitch {
+  font-family: 'VT323', monospace;
+  font-size: clamp(36px, 6vw, 70px);
+  line-height: 1;
+  color: var(--hero-fg);
+  flex: 0 0 auto;
+}
+.glitch--accent { align-self: flex-end;   margin-bottom: 6%; }
+.glitch--dim    { align-self: flex-start; margin-top: 6%; opacity: 0.55; }
 
+/* manifest sits on a bg-coloured plate so it reads over the dots */
+.hero-manifest-band {
+  background: var(--ascii-bg);
+  margin-inline: calc(-1 * var(--hero-pad));
+  padding: 26px var(--hero-pad);
+}
 .hero-manifest {
   max-width: 1100px;
-  align-self: center;
+  margin: 0 auto;
   text-align: center;
   font-family: 'Cascadia Code', 'Courier New', monospace;
-  font-size: clamp(14px, 1.5vw, 19px);
+  font-size: clamp(14px, 1.4vw, 18px);
   line-height: 1.6;
   color: var(--hero-fg);
 }
@@ -134,7 +155,7 @@ body {
   height: 56px;
   border: 2px solid var(--pill-line);
   border-radius: 28px;
-  background: transparent;
+  background: var(--ascii-bg);
   color: var(--pill-line);
   font-family: 'Cascadia Code', 'Courier New', monospace;
   font-size: 1rem;
@@ -152,7 +173,7 @@ body {
   overflow: hidden;
   padding: 0;
   cursor: default;
-  color: var(--hero-fg);
+  color: var(--pill-line);
 }
 .marquee-pill-track {
   display: flex;

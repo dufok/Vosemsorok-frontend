@@ -175,5 +175,5 @@ export function AsciiLogoBg() {
     };
   }, []);
 
-  return <canvas ref={ref} className="ascii-logo-bg" aria-hidden="true" />;
+  return <canvas ref={ref} id="ascii-bg-canvas" className="ascii-logo-bg" aria-hidden="true" />;
 }

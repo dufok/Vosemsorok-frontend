@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Logo3D } from './Logo3D';
 
 const MANIFEST =
   "My carbon footprint is smaller than the thousand tokens burned on images you'd never love. " +
@@ -28,12 +29,15 @@ export function Header() {
 
   return (
     <header className="hero">
-      <div className="hero-glitch">
+      <div className="hero-top">
         <span className="glitch glitch--accent">ssory</span>
+        <Logo3D />
         <span className="glitch glitch--dim">again?</span>
       </div>
 
-      <p className="hero-manifest">{MANIFEST}</p>
+      <div className="hero-manifest-band">
+        <p className="hero-manifest">{MANIFEST}</p>
+      </div>
 
       <div className="hero-row">
         <div className="pill marquee-pill" aria-hidden="true">
