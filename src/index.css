@@ -95,14 +95,15 @@ body {
 /* ── Hero header (BADPROMT) ─────────────────────── */
 .hero {
   --hero-pad: var(--edge);
+  --hero-vgap: clamp(16px, 3vh, 36px);   /* top air == gap from logo down to manifest */
   position: relative;
   z-index: 1;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 12px;
-  padding: 36px var(--hero-pad);
+  justify-content: flex-start;
+  gap: var(--hero-vgap);
+  padding: var(--hero-vgap) var(--hero-pad) 36px;
 }
 
 /* ssory · LOGO · again? */
@@ -116,7 +117,6 @@ body {
   height: min(380px, 28vw);
   display: block;
   pointer-events: none;
-  margin-bottom: -8px;
 }
 .glitch {
   position: absolute;
@@ -149,7 +149,7 @@ body {
 .hero-row {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 28px;            /* spacing between marquee pill and the action pills */
   position: relative;   /* anchor for the timeline line that drops from the marquee pill */
 }
 /* the vertical project line starts at the marquee pill and runs down into the timeline */
@@ -166,9 +166,8 @@ body {
 .hero-actions {
   display: flex;
   align-items: center;
-  gap: 20px;
-  flex: 0 0 auto;
-  margin-left: auto;    /* push contact + decor pills to the right edge */
+  gap: 24px;
+  flex: 0 0 auto;       /* sit right after the marquee pill (not pushed to the edge) */
 }
 .hero-manifest--short { display: none; }
 
@@ -344,12 +343,15 @@ body {
 
 /* ── Overview Text ──────────────────────────────── */
 .project-overview-wrap {
-  margin-left: var(--year-indent);
+  margin-left: var(--year-indent);                 /* left edge butts the vertical line, like the photos */
+  margin-right: calc(-1 * (100vw - 100%));         /* bleed to the right viewport edge — "infinite right" */
   margin-top: 14px;
-  max-width: var(--overview-w);
+  background: color-mix(in srgb, var(--ascii-bg) 62%, transparent);   /* same translucent plate as the manifest */
+  padding: 18px clamp(20px, 3vw, 40px);
 }
 
 .project-overview {
+  max-width: var(--overview-w);
   font-family: 'Cascadia Code', 'Courier New', monospace;
   font-size: 0.82rem;
   color: var(--text);

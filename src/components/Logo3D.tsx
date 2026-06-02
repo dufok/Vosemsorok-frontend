@@ -49,36 +49,38 @@ export function Logo3D() {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const d1 = new THREE.DirectionalLight(0xffffff, 1.4);
+    // env supplies the broad colour; lights only add the specular sheen on top
+    scene.add(new THREE.AmbientLight(0xffffff, 0.18));
+    const d1 = new THREE.DirectionalLight(0xffffff, 1.3);
     d1.position.set(2, 3, 4);
     scene.add(d1);
-    const d2 = new THREE.DirectionalLight(0xffffff, 0.45);
+    const d2 = new THREE.DirectionalLight(0xffffff, 0.4);
     d2.position.set(-3, -1, 2);
     scene.add(d2);
 
-    // brighter, more saturated orange for the day mirror
-    const dayEnv = orangeEnv(['#FFE3B0', '#FF9A1F', '#B25400']);
-    // calmer orange for the night chrome (original look)
-    const nightEnv = orangeEnv(['#FFC061', '#FF8A00', '#7A3D00']);
+    // PMREM-prefilter the orange gradients so the metal actually reflects them
+    // (a raw equirect texture on material.envMap barely contributes for PBR).
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const makeEnv = (stops: [string, string, string]) => {
+      const tex = orangeEnv(stops);
+      const rt = pmrem.fromEquirectangular(tex);
+      tex.dispose();
+      return rt.texture;
+    };
+    const dayEnv = makeEnv(['#FFE3B0', '#FF9A1F', '#B25400']);   // bright, saturated → orange mirror
+    const nightEnv = makeEnv(['#C0700E', '#5A3300', '#140A02']); // deep amber on near-black → dark chrome
 
     let mat: THREE.MeshStandardMaterial | null = null;
     const applyTheme = () => {
-      if (!mat) return;
-      if (isDay()) {
-        mat.color.set(0xfff3e3);     // warm tint so reflections carry orange
+      const day = isDay();
+      scene.environment = day ? dayEnv : nightEnv;
+      if (mat) {
+        mat.color.set(day ? 0xfff3e6 : 0xffffff);
         mat.metalness = 1.0;
-        mat.roughness = 0.045;        // sharper → more mirror
-        mat.envMap = dayEnv;
-        mat.envMapIntensity = 1.75;
-      } else {
-        mat.color.set(0xffffff);
-        mat.metalness = 1.0;
-        mat.roughness = 0.12;
-        mat.envMap = nightEnv;
-        mat.envMapIntensity = 1.15;
+        mat.roughness = day ? 0.05 : 0.14;   // day sharper → more mirror
+        mat.envMapIntensity = day ? 1.7 : 1.0;
+        mat.needsUpdate = true;
       }
-      mat.needsUpdate = true;
     };
 
     const pivot = new THREE.Group();
@@ -156,6 +158,7 @@ export function Logo3D() {
       mq.removeEventListener('change', applyTheme);
       dayEnv.dispose();
       nightEnv.dispose();
+      pmrem.dispose();
       renderer.dispose();
     };
   }, []);
