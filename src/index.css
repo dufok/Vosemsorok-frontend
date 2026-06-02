@@ -23,12 +23,13 @@
 /* ── Tokens ─────────────────────────────────────── */
 :root {
   --bg:            #c6bbaa;
-  --text:          #1a1a1a;
+  --text:          #F5F5F0;   /* project text — white (both themes) */
   --text-dim:      #5a5550;
-  --timeline-line: #1a1a1a;
+  --timeline-line: #0A0A0A;
   --header-h:      44px;
-  --spine-x:       64px;
-  --year-indent:   120px;
+  --edge:          clamp(24px, 6vw, 110px);   /* shared left inset: hero padding + timeline origin */
+  --spine-x:       calc(var(--edge) + 44px);  /* vertical line, 44px inside the marquee pill (Penpot spec) */
+  --year-indent:   calc(var(--edge) + 64px);  /* year/content, 20px right of the line */
   --photo-h:       420px;
   --gap:           5px;
   --overview-w:    640px;
@@ -36,7 +37,7 @@
   --ascii-bg:      #FF8A00;
   --ascii-fg:      #0A0A0A;
   --hero-fg:       #F5F5F0;   /* display text (white, both themes) */
-  --manifest-fg:   #0A0A0A;   /* manifest — black on the day plate */
+  --manifest-fg:   #F5F5F0;   /* manifest — white (both themes) */
   --pill-line:     #0A0A0A;   /* pill outline — day */
   --accent:        #FF8A00;
 }
@@ -93,7 +94,7 @@ body {
 
 /* ── Hero header (BADPROMT) ─────────────────────── */
 .hero {
-  --hero-pad: clamp(24px, 6vw, 110px);
+  --hero-pad: var(--edge);
   position: relative;
   z-index: 1;
   min-height: 100vh;
@@ -149,12 +150,25 @@ body {
   display: flex;
   align-items: center;
   gap: 20px;
+  position: relative;   /* anchor for the timeline line that drops from the marquee pill */
+}
+/* the vertical project line starts at the marquee pill and runs down into the timeline */
+.hero-row::after {
+  content: '';
+  position: absolute;
+  top: 100%;                 /* bottom edge of the marquee pill */
+  left: 44px;                /* 44px inside the pill's left edge (Penpot spec) */
+  width: 2px;
+  height: 100vh;             /* bridges the lower hero; timeline spine continues from there */
+  background: var(--timeline-line);
+  pointer-events: none;
 }
 .hero-actions {
   display: flex;
   align-items: center;
   gap: 20px;
   flex: 0 0 auto;
+  margin-left: auto;    /* push contact + decor pills to the right edge */
 }
 .hero-manifest--short { display: none; }
 
@@ -176,7 +190,8 @@ body {
 .contact-pill:hover { background: var(--pill-line); color: var(--ascii-bg); }
 
 .marquee-pill {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  width: clamp(180px, 22vw, 320px);   /* ~3× narrower than the old full-width pill */
   min-width: 0;
   overflow: hidden;
   padding: 0;
@@ -190,7 +205,7 @@ body {
   will-change: transform;
 }
 .marquee-pill-track span {
-  padding: 0 24px;
+  padding: 0;          /* spacing baked into the string → seamless loop, no seam gap */
   font-size: 0.95rem;
   letter-spacing: 0.08em;
 }
@@ -285,7 +300,7 @@ body {
 .project-role {
   font-family: 'VT323', monospace;
   font-size: 1.25rem;
-  color: var(--text-dim);
+  color: var(--text);
   line-height: 1;
 }
 
@@ -354,9 +369,9 @@ body {
 /* ── Dark Theme ─────────────────────────────────── */
 body.dark {
   --bg:            #0f0f0f;
-  --text:          #e8e3da;
+  --text:          #F5F5F0;
   --text-dim:      #6b6560;
-  --timeline-line: #e8e3da;
+  --timeline-line: #FF8A00;
   --ascii-bg:      #0A0A0A;
   --ascii-fg:      #FF8A00;
   --hero-fg:       #F5F5F0;
@@ -406,9 +421,9 @@ body.dark {
 @media (prefers-color-scheme: dark) {
   body:not(.light) {
     --bg:            #0f0f0f;
-    --text:          #e8e3da;
+    --text:          #F5F5F0;
     --text-dim:      #6b6560;
-    --timeline-line: #e8e3da;
+    --timeline-line: #FF8A00;
     --ascii-bg:      #0A0A0A;
     --ascii-fg:      #FF8A00;
     --hero-fg:       #F5F5F0;
@@ -420,8 +435,7 @@ body.dark {
 /* ── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
   :root {
-    --spine-x:     28px;
-    --year-indent: 70px;
+    --edge:        16px;     /* spine-x → 60px, year-indent → 80px */
     --photo-h:     260px;
   }
   .project-year { font-size: 1.1rem; }
