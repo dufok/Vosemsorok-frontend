@@ -104,7 +104,8 @@ export function AsciiLogoBg() {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     mq.addEventListener('change', readTheme);
 
-    // mouse follow / idle
+    // mouse follow / idle  (narrow screens: always spin, never follow)
+    const mqNarrow = window.matchMedia('(max-width: 768px)');
     const target = { x: 0, y: 0 };
     let lastMove = -1e9;
     const onMove = (e: MouseEvent) => {
@@ -123,10 +124,12 @@ export function AsciiLogoBg() {
       lastT = now;
 
       if (ready && rt && buf) {
+        const narrow = mqNarrow.matches;
         const sinceMove = now - lastMove;
-        if (sinceMove > IDLE_MS) {
+        if (narrow || sinceMove > IDLE_MS) {
           const ramp = Math.min(1, (sinceMove - IDLE_MS) / RAMP_MS);
-          const eased = ramp * ramp * (3 - 2 * ramp);   // smoothstep — soft start
+          // mobile/narrow: full-speed spin always, never pause for cursor follow
+          const eased = narrow ? 1 : ramp * ramp * (3 - 2 * ramp);   // smoothstep — soft start
           pivot.rotation.y += DRIFT * eased * (dt / 1000);
           pivot.rotation.x += (0 - pivot.rotation.x) * 0.04;
         } else {

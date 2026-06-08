@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import { AsciiLogoBg } from './components/AsciiLogoBg';
 import { Header } from './components/Header';
 import { Timeline } from './components/Timeline';
+import { Page404 } from './components/Page404';
 import { fetchProjects } from './api/client';
 import type { Project } from './types';
 
 type Theme = 'auto' | 'light' | 'dark';
+
+// only the root path is a real route; everything else is a 404
+const isNotFound = window.location.pathname !== '/';
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -41,12 +45,18 @@ export default function App() {
   return (
     <div className="app">
       <AsciiLogoBg />
-      <Header />
-      <main className="main">
-        {loading && <p className="status">…</p>}
-        {error   && <p className="status error">{error}</p>}
-        {!loading && !error && <Timeline projects={projects} />}
-      </main>
+      {isNotFound ? (
+        <Page404 />
+      ) : (
+        <>
+          <Header />
+          <main className="main">
+            {loading && <p className="status">…</p>}
+            {error   && <p className="status error">{error}</p>}
+            {!loading && !error && <Timeline projects={projects} />}
+          </main>
+        </>
+      )}
       <button
         className="theme-toggle"
         onClick={cycleTheme}

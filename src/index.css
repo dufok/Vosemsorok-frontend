@@ -237,6 +237,45 @@ body {
 }
 .contact-link:hover { text-decoration: underline; }
 
+/* ── 404 page ────────────────────────────────────── */
+.notfound {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--edge);
+}
+.notfound-plate {
+  text-align: center;
+  background: color-mix(in srgb, var(--ascii-bg) 62%, transparent);
+  padding: clamp(32px, 6vw, 72px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+.notfound-code {
+  font-family: 'ModeNine', monospace;
+  font-size: clamp(96px, 24vw, 240px);
+  line-height: 0.85;
+  letter-spacing: 0.04em;
+  color: var(--hero-fg);
+}
+.notfound-msg {
+  font-family: 'Cascadia Code', 'Courier New', monospace;
+  font-size: clamp(14px, 1.6vw, 18px);
+  line-height: 1.6;
+  color: var(--manifest-fg);
+  max-width: 460px;
+}
+.notfound-home {
+  justify-content: center;
+  text-decoration: none;
+}
+.notfound-home:hover { background: var(--pill-line); color: var(--ascii-bg); }
+
 /* ── Timeline ───────────────────────────────────── */
 .timeline {
   position: relative;
@@ -437,11 +476,15 @@ body.dark {
 /* ── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
   :root {
-    --edge:        16px;     /* spine-x → 60px, year-indent → 80px */
+    --edge:        16px;
+    --spine-x:     16px;     /* projects hug the left edge on mobile */
+    --year-indent: 28px;     /* photos/overview start ~flush left */
     --photo-h:     260px;
   }
   .project-year { font-size: 1.1rem; }
   .project-role { font-size: 1rem; }
+  /* bigger logo on narrow screens (paired with closer camera in Logo3D) */
+  .hero-logo3d { height: min(320px, 62vw); }
 }
 
 /* ── Medium width down: stack pills, shorter manifest ─ */

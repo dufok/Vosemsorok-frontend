@@ -127,6 +127,11 @@ export function Logo3D() {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     mq.addEventListener('change', applyTheme);
 
+    // narrow screens: no cursor → gentle automatic left-right sway + bigger framing
+    const mqNarrow = window.matchMedia('(max-width: 768px)');
+    const SWAY_AMP = 0.5;        // sway amplitude (rad)
+    const SWAY_SPEED = 0.0009;   // sway speed (rad per ms)
+
     const target = { x: 0, y: 0 };
     const onMove = (e: MouseEvent) => {
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
@@ -137,11 +142,16 @@ export function Logo3D() {
     window.addEventListener('mousemove', onMove);
 
     let raf = 0;
-    const frame = () => {
+    const frame = (now: number) => {
       if (ready) {
+        const narrow = mqNarrow.matches;
+        if (narrow) {
+          target.y = Math.sin(now * SWAY_SPEED) * SWAY_AMP;   // soft back-and-forth
+          target.x = 0;
+        }
         pivot.rotation.x += (target.x - pivot.rotation.x) * 0.08;
         pivot.rotation.y += (target.y - pivot.rotation.y) * 0.08;
-        camera.position.set(0, 0, fitDist * 0.55);
+        camera.position.set(0, 0, fitDist * (narrow ? 0.42 : 0.55));   // mobile: closer → bigger
         camera.lookAt(0, 0, 0);
       }
       renderer.render(scene, camera);
