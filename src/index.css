@@ -157,7 +157,9 @@ body {
   content: '';
   position: absolute;
   top: 100%;                 /* bottom edge of the marquee pill */
-  left: 44px;                /* 44px inside the pill's left edge (Penpot spec) */
+  /* align with the timeline spine: --spine-x is from the viewport, hero-row
+     content box starts at --edge → subtract it. desktop = 44px, mobile = 0. */
+  left: calc(var(--spine-x) - var(--edge));
   width: 2px;
   height: 100vh;             /* bridges the lower hero; timeline spine continues from there */
   background: var(--timeline-line);
