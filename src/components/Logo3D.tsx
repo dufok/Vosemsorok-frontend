@@ -3,12 +3,10 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
- * Crisp 3D BADPROMT logo (logo.glb) — the hero centerpiece.
- * Chrome material reflecting a static orange environment (no background dots).
- * Theme-aware:
- *   night (dark page) → calmer dark chrome (as liked).
- *   day   (light page) → brighter, more mirror-like, tinted into the brand orange.
- * Turns toward the mouse.
+ * Crisp 3D BADPROMPT logo (logo.glb) — the hero centerpiece.
+ * Keeps the model's own black material; an orange (day) / amber (night) PMREM
+ * environment supplies the reflections/sheen so the black metal reads with form.
+ * Turns toward the mouse (gentle auto-sway on narrow screens).
  */
 const BASE = { x: 10, y: -83, z: 1 };
 const D2R = Math.PI / 180;
@@ -70,16 +68,14 @@ export function Logo3D() {
     const dayEnv = makeEnv(['#FFE3B0', '#FF9A1F', '#B25400']);   // bright, saturated → orange mirror
     const nightEnv = makeEnv(['#C0700E', '#5A3300', '#140A02']); // deep amber on near-black → dark chrome
 
-    let mat: THREE.MeshStandardMaterial | null = null;
+    // keep the model's own (black) material — just drive the env reflection per theme
+    const mats: THREE.MeshStandardMaterial[] = [];
     const applyTheme = () => {
       const day = isDay();
       scene.environment = day ? dayEnv : nightEnv;
-      if (mat) {
-        mat.color.set(day ? 0xfff3e6 : 0xffffff);
-        mat.metalness = 1.0;
-        mat.roughness = day ? 0.05 : 0.14;   // day sharper → more mirror
-        mat.envMapIntensity = day ? 1.7 : 1.0;
-        mat.needsUpdate = true;
+      for (const m of mats) {
+        m.envMapIntensity = day ? 1.5 : 1.0;
+        m.needsUpdate = true;
       }
     };
 
@@ -102,12 +98,18 @@ export function Logo3D() {
     new GLTFLoader().load(`${import.meta.env.BASE_URL}logo.glb`, (gltf) => {
       if (disposed) return;
       const model = gltf.scene;
-      mat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1.0, roughness: 0.12 });
-      applyTheme();
       model.traverse((o) => {
         const mesh = o as THREE.Mesh;
-        if (mesh.isMesh) mesh.material = mat!;
+        if (mesh.isMesh) {
+          const arr = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          for (const m of arr) {
+            if (m && !mats.includes(m as THREE.MeshStandardMaterial)) {
+              mats.push(m as THREE.MeshStandardMaterial);
+            }
+          }
+        }
       });
+      applyTheme();
       const box = new THREE.Box3().setFromObject(model);
       model.position.sub(box.getCenter(new THREE.Vector3()));
       const unit = new THREE.Group();
