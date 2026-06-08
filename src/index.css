@@ -487,6 +487,20 @@ body.dark {
   .project-role { font-size: 1rem; }
   /* bigger logo on narrow screens (paired with closer camera in Logo3D) */
   .hero-logo3d { height: min(320px, 62vw); }
+
+  /* mobile pill layout (Penpot "v2 — Mobile version" idea):
+     top row = contact + decor, right-aligned; marquee bleeds off the left edge */
+  .hero-row { gap: 18px; }
+  .hero-actions {
+    order: -1;                 /* above the marquee */
+    justify-content: flex-end; /* contact + decor hug the right */
+    gap: 12px;
+  }
+  .marquee-pill {
+    width: auto;
+    align-self: stretch;       /* fill the content width… */
+    margin-left: calc(-1 * var(--edge) - 48px);  /* …then run off the left edge (clipped) */
+  }
 }
 
 /* ── Medium width down: stack pills, shorter manifest ─ */
