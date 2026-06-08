@@ -20,7 +20,7 @@ function ContactPopup({ onClose }: { onClose: () => void }) {
       <div className="contact-card" onClick={(e) => e.stopPropagation()}>
         <button className="contact-close" onClick={onClose} aria-label="close">×</button>
         <a className="contact-link" href="https://t.me/stepn_v" target="_blank" rel="noreferrer">Telegram</a>
-        <a className="contact-link" href="https://wa.me/1166470362" target="_blank" rel="noreferrer">WhatsApp</a>
+        <a className="contact-link" href="https://wa.me/5491166470362" target="_blank" rel="noreferrer">WhatsApp</a>
         <a className="contact-link" href="mailto:stepan.vladovskiy@gmail.com">Email</a>
       </div>
     </div>
