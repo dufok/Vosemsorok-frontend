@@ -12,7 +12,7 @@ const MANIFEST =
 const MANIFEST_SHORT =
   "My carbon footprint is smaller than the thousand tokens burned on images you'd never love.";
 
-const MARQUEE = '·  BADPROMT  ·  STEPAN VLADOVSKII  ·  VISUALIZER  ·  3D DESIGNER  ';
+const MARQUEE = '·  BADPROMPT  ·  STEPAN VLADOVSKII  ·  VISUALIZER  ·  3D DESIGNER  ';
 
 function ContactPopup({ onClose }: { onClose: () => void }) {
   return (

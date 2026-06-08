@@ -1,5 +1,5 @@
 /**
- * BADPROMT 404 — on-brand "not found" page.
+ * BADPROMPT 404 — on-brand "not found" page.
  * Sits over the shared AsciiLogoBg; same translucent plate as the manifest.
  */
 export function Page404() {

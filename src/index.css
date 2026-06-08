@@ -33,7 +33,7 @@
   --photo-h:       420px;
   --gap:           5px;
   --overview-w:    640px;
-  /* BADPROMT ascii background — day */
+  /* BADPROMPT ascii background — day */
   --ascii-bg:      #FF8A00;
   --ascii-fg:      #0A0A0A;
   --hero-fg:       #F5F5F0;   /* display text (white, both themes) */
@@ -92,7 +92,7 @@ body {
 .app  { min-height: 100vh; }
 .main { padding-top: 0; position: relative; }
 
-/* ── Hero header (BADPROMT) ─────────────────────── */
+/* ── Hero header (BADPROMPT) ─────────────────────── */
 .hero {
   --hero-pad: var(--edge);
   --hero-vgap: clamp(16px, 3vh, 36px);   /* top air == gap from logo down to manifest */
