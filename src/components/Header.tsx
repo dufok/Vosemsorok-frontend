@@ -17,11 +17,11 @@ const MARQUEE = '·  BADPROMPT  ·  STEPAN VLADOVSKII  ·  VISUALIZER  ·  3D DE
 function ContactPopup({ onClose }: { onClose: () => void }) {
   return (
     <div className="contact-overlay" onClick={onClose}>
-      <div className="contact-card" onClick={(e) => e.stopPropagation()}>
-        <button className="contact-close" onClick={onClose} aria-label="close">×</button>
+      <div className="contact-card pill" onClick={(e) => e.stopPropagation()}>
         <a className="contact-link" href="https://t.me/stepn_v" target="_blank" rel="noreferrer">Telegram</a>
         <a className="contact-link" href="https://wa.me/5491166470362" target="_blank" rel="noreferrer">WhatsApp</a>
         <a className="contact-link" href="mailto:stepan.vladovskiy@gmail.com">Email</a>
+        <button className="contact-close" onClick={onClose} aria-label="close">×</button>
       </div>
     </div>
   );

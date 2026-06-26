@@ -214,30 +214,58 @@ body {
 
 .decor-pill { width: 56px; padding: 0; }
 
-/* contact popup */
+/* contact popup — a pill that pops up (reuses .pill: same border/bg/font as header pills) */
 .contact-overlay {
   position: fixed; inset: 0; z-index: 300;
   background: rgba(10,10,10,0.6);
   display: flex; align-items: center; justify-content: center;
+  padding: 16px;
 }
 .contact-card {
-  position: relative;
-  background: var(--ascii-bg);
-  border: 2px solid var(--pill-line);
-  border-radius: 18px;
-  padding: 40px 56px;
-  display: flex; flex-direction: column; gap: 16px;
+  /* .pill (in the markup) gives border, bg, color, font; here we shape it into a full
+     capsule whose segments are the contact links */
+  height: clamp(52px, 13vw, 60px);
+  padding: 0;
+  width: auto;
+  max-width: calc(100vw - 32px);
+  align-items: stretch;          /* segments span full capsule height (dividers + hover fills) */
+  border-radius: 999px;
+  overflow: hidden;              /* clip per-segment hover fills to the capsule ends */
+  cursor: default;
+  animation: contact-pop 0.18s ease;
 }
-.contact-close {
-  position: absolute; top: 10px; right: 16px;
-  background: none; border: none; color: var(--pill-line);
-  font-size: 1.6rem; cursor: pointer; line-height: 1;
+@keyframes contact-pop {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
 }
 .contact-link {
-  font-family: 'VT323', monospace; font-size: 1.6rem;
-  color: var(--pill-line); text-decoration: none;
+  display: flex; align-items: center;
+  padding: 0 clamp(14px, 3.2vw, 24px);
+  font-family: 'Cascadia Code', 'Courier New', monospace;
+  font-size: clamp(0.82rem, 2.4vw, 1rem);
+  color: var(--pill-line);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease;
 }
-.contact-link:hover { text-decoration: underline; }
+.contact-link + .contact-link {
+  border-left: 2px solid color-mix(in srgb, var(--pill-line) 28%, transparent);
+}
+.contact-link:hover { background: var(--pill-line); color: var(--ascii-bg); }
+.contact-close {
+  display: flex; align-items: center;
+  padding: 0 clamp(14px, 3vw, 20px);
+  background: none;
+  border: 0;
+  border-left: 2px solid color-mix(in srgb, var(--pill-line) 28%, transparent);
+  color: var(--pill-line);
+  font-size: 1.3rem; line-height: 1; cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.contact-close:hover { background: var(--pill-line); color: var(--ascii-bg); }
+@media (prefers-reduced-motion: reduce) {
+  .contact-card { animation: none; }
+}
 
 /* ── 404 page ────────────────────────────────────── */
 .notfound {
