@@ -2,17 +2,13 @@ import { useState } from 'react';
 import { Logo3D } from './Logo3D';
 
 const MANIFEST =
-  "My carbon footprint is smaller than the thousand tokens burned on images you'd never love. " +
-  "I don't charge for revisions; I work for the beauty of it. I'm no saint — I run my own servers, " +
-  "I work with AI, I buy tokens like a one-man corporation — but I'm learning to spend less and waste " +
-  "nothing, for the glaciers, for the animals, for a planet worth the light. I'm for beauty, for your " +
-  "project, for your chance to move people through the way space and culture are felt. I'd rather spend " +
-  "a little light making something true than a flood of it making noise. We imagine it together. You build it.";
+  "Stepan Vladovskii — 3D artist-engineer. Set design, 3D visualization and web-3D/AI pipelines. " +
+  "50+ built projects for Yandex, Nike, Google, Jägermeister and others. 2018 → now.";
 
 const MANIFEST_SHORT =
-  "My carbon footprint is smaller than the thousand tokens burned on images you'd never love.";
+  "Stepan Vladovskii — 3D artist-engineer. Set design, 3D visualization and web-3D/AI pipelines.";
 
-const MARQUEE = '·  BADPROMPT  ·  STEPAN VLADOVSKII  ·  VISUALIZER  ·  3D DESIGNER  ';
+const MARQUEE = '·  BADPROMPT  ·  STEPAN VLADOVSKII  ·  3D ARTIST-ENGINEER  ·  SET DESIGN  ·  WEB-3D  ·  AI PIPELINES  ';
 
 function ContactPopup({ onClose }: { onClose: () => void }) {
   return (
