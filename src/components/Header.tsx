@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Logo3D } from './Logo3D';
 
 const MANIFEST =
-  "Stepan Vladovskii — 3D artist-engineer. Set design, 3D visualization and web-3D/AI pipelines. " +
-  "50+ built projects for Yandex, Nike, Google, Jägermeister and others. 2018 → now.";
+  "Stepan Vladovskii — Engineer, Set Designer, Organizer, Director of Photography, and — most in-demand of all — 3D Artist. " +
+  "For years I've helped create, launch, build, run, glue and cut. Actively looking for a new team!";
 
 const MANIFEST_SHORT =
-  "Stepan Vladovskii — 3D artist-engineer. Set design, 3D visualization and web-3D/AI pipelines.";
+  "Stepan Vladovskii — Engineer, Set Designer, Director of Photography, and most in-demand — 3D Artist. Open to a new team.";
 
-const MARQUEE = '·  BADPROMPT  ·  STEPAN VLADOVSKII  ·  3D ARTIST-ENGINEER  ·  SET DESIGN  ·  WEB-3D  ·  AI PIPELINES  ';
+const MARQUEE = '·  BADPROMPT  ·  STEPAN VLADOVSKII  ·  ENGINEER  ·  SET DESIGNER  ·  ORGANIZER  ·  DIRECTOR OF PHOTOGRAPHY  ·  3D ARTIST  ·  OPEN TO WORK  ';
 
 function ContactPopup({ onClose }: { onClose: () => void }) {
   return (
