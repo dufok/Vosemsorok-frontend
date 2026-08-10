@@ -8,7 +8,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
  * Theme-aware:
  *   night (dark page) → calmer dark chrome.
  *   day   (light page) → brighter, more mirror-like, tinted into the brand orange.
- * Turns toward the mouse (gentle auto-sway on narrow screens).
+ * Turns toward the mouse; on narrow screens it stays in its base pose.
  */
 const BASE = { x: 10, y: -83, z: 1 };
 const D2R = Math.PI / 180;
@@ -97,7 +97,8 @@ export function Logo3D() {
       camera.updateProjectionMatrix();
     };
     size();
-    window.addEventListener('resize', size);
+    const onResize = () => { size(); kick(); };
+    window.addEventListener('resize', onResize);
 
     new GLTFLoader().load(`${import.meta.env.BASE_URL}logo.glb`, (gltf) => {
       if (disposed) return;
@@ -119,53 +120,62 @@ export function Logo3D() {
         Math.sin(THREE.MathUtils.degToRad(camera.fov / 2));
       pivot.add(unit);
       ready = true;
+      kick();
     });
 
     // react to theme changes (toggle button flips body class; auto follows OS)
-    const themeObserver = new MutationObserver(applyTheme);
+    const onTheme = () => { applyTheme(); kick(); };
+    const themeObserver = new MutationObserver(onTheme);
     themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    mq.addEventListener('change', applyTheme);
+    mq.addEventListener('change', onTheme);
 
-    // narrow screens: no cursor → gentle automatic left-right sway + bigger framing
+    // narrow screens: no cursor, so the logo just holds its base pose — no sway.
+    // Rendering is on demand (see `kick`): once the pose settles the loop stops,
+    // so a phone is not running a WebGL frame loop behind a still image.
     const mqNarrow = window.matchMedia('(max-width: 768px)');
-    const SWAY_AMP = 0.5;        // sway amplitude (rad)
-    const SWAY_SPEED = 0.0009;   // sway speed (rad per ms)
 
     const target = { x: 0, y: 0 };
+
+    let raf = 0;
+    const frame = () => {
+      raf = 0;
+      const narrow = mqNarrow.matches;
+      if (ready) {
+        if (narrow) { target.x = 0; target.y = 0; }
+        pivot.rotation.x += (target.x - pivot.rotation.x) * 0.08;
+        pivot.rotation.y += (target.y - pivot.rotation.y) * 0.08;
+        camera.position.set(0, 0, fitDist * (narrow ? 0.42 : 0.55));
+        camera.lookAt(0, 0, 0);
+      }
+      renderer.render(scene, camera);
+      const settled = ready &&
+        Math.abs(target.x - pivot.rotation.x) < 1e-3 &&
+        Math.abs(target.y - pivot.rotation.y) < 1e-3;
+      if (!settled) kick();
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+
     const onMove = (e: MouseEvent) => {
+      if (mqNarrow.matches) return;   // touch devices: nothing to follow
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
       const ny = (e.clientY / window.innerHeight) * 2 - 1;
       target.y = nx * 0.5;
       target.x = ny * 0.3;
+      kick();
     };
     window.addEventListener('mousemove', onMove);
-
-    let raf = 0;
-    const frame = (now: number) => {
-      if (ready) {
-        const narrow = mqNarrow.matches;
-        if (narrow) {
-          target.y = Math.sin(now * SWAY_SPEED) * SWAY_AMP;   // soft back-and-forth
-          target.x = 0;
-        }
-        pivot.rotation.x += (target.x - pivot.rotation.x) * 0.08;
-        pivot.rotation.y += (target.y - pivot.rotation.y) * 0.08;
-        camera.position.set(0, 0, fitDist * (narrow ? 0.42 : 0.55));   // mobile: closer → bigger
-        camera.lookAt(0, 0, 0);
-      }
-      renderer.render(scene, camera);
-      raf = requestAnimationFrame(frame);
-    };
-    raf = requestAnimationFrame(frame);
+    mqNarrow.addEventListener('change', kick);
+    kick();
 
     return () => {
       disposed = true;
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', size);
+      window.removeEventListener('resize', onResize);
       window.removeEventListener('mousemove', onMove);
       themeObserver.disconnect();
-      mq.removeEventListener('change', applyTheme);
+      mq.removeEventListener('change', onTheme);
+      mqNarrow.removeEventListener('change', kick);
       dayEnv.dispose();
       nightEnv.dispose();
       pmrem.dispose();

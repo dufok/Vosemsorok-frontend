@@ -514,7 +514,7 @@ body.dark {
   .project-year { font-size: 1.1rem; }
   .project-role { font-size: 1rem; }
   /* bigger logo on narrow screens (paired with closer camera in Logo3D) */
-  .hero-logo3d { height: min(320px, 62vw); }
+  .hero-logo3d { height: min(272px, 52.7vw); }   /* 15% smaller than desktop framing */
 
   /* mobile pill layout (Penpot "v2 — Mobile version" idea):
      top row = contact + decor, right-aligned; marquee bleeds off the left edge */
@@ -539,3 +539,44 @@ body.dark {
   .hero-manifest--full  { display: none; }
   .hero-manifest--short { display: block; }
 }
+
+/* ── 3D viewer entry ────────────────────────────── */
+/* Set per project by `viewer.txt` in its folder → projects.viewer_url.
+   Two ways in: a pill next to year/role, and the first gallery frame. */
+.project-3d-pill {
+  align-self: center;
+  border: 2px solid var(--pill-line);
+  border-radius: 999px;
+  background: var(--ascii-bg);
+  color: var(--pill-line);
+  font-family: 'Cascadia Code', 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 8px 16px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.project-3d-pill:hover { background: var(--pill-line); color: var(--ascii-bg); }
+
+.gallery-item--3d {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+.gallery-3d-badge {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  border: 2px solid var(--pill-line);
+  border-radius: 999px;
+  background: var(--ascii-bg);
+  color: var(--pill-line);
+  font-family: 'Cascadia Code', 'Courier New', monospace;
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 8px 14px;
+  pointer-events: none;   /* clicks belong to the frame, not the badge */
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.gallery-item--3d:hover .gallery-3d-badge { background: var(--pill-line); color: var(--ascii-bg); }

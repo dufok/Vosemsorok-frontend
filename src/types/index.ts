@@ -20,6 +20,7 @@ export interface Project {
   short_desc: string | null;
   category: string | null;
   tags: string[];
+  viewer_url: string | null;
   folder_mtime: string | null;
   last_synced_at: string | null;
   created_at: string | null;
