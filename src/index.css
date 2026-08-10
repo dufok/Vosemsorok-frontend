@@ -514,7 +514,10 @@ body.dark {
   .project-year { font-size: 1.1rem; }
   .project-role { font-size: 1rem; }
   /* bigger logo on narrow screens (paired with closer camera in Logo3D) */
-  .hero-logo3d { height: min(272px, 52.7vw); }   /* 15% smaller than desktop framing */
+  /* The camera sits at 0.42 of the fit distance, so the logo overflows its
+     canvas: the wide wordmark was clipped at both edges on a phone. A shorter
+     box both scales it down and widens the aspect, giving the width room. */
+  .hero-logo3d { height: min(218px, 42.2vw); }
 
   /* mobile pill layout (Penpot "v2 — Mobile version" idea):
      top row = contact + decor, right-aligned; marquee bleeds off the left edge */
