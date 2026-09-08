@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Logo3D } from './Logo3D';
 
 const MANIFEST =
-  "Stepan Vladovskii — Engineer, Set Designer, Organizer, Director of Photography, and — most in-demand of all — 3D Artist. " +
+  "Stepan Vladovskii — Engineer, Set Designer, Producer, Director of Photography, and — most in-demand of all — 3D Artist. " +
   "For years I've helped create, launch, build, run, glue and cut. Actively looking for a new team!";
 
 const MANIFEST_SHORT =
   "Stepan Vladovskii — Engineer, Set Designer, Director of Photography, and most in-demand — 3D Artist. Open to a new team.";
 
-const MARQUEE = '·  BADPROMPT  ·  STEPAN VLADOVSKII  ·  ENGINEER  ·  SET DESIGNER  ·  ORGANIZER  ·  DIRECTOR OF PHOTOGRAPHY  ·  3D ARTIST  ·  OPEN TO WORK  ';
+const MARQUEE = '·  BADPROMPT  ·  STEPAN VLADOVSKII  ·  ENGINEER  ·  SET DESIGNER  ·  PRODUCER  ·  DIRECTOR OF PHOTOGRAPHY  ·  3D ARTIST  ·  OPEN TO WORK  ';
 
 function ContactPopup({ onClose }: { onClose: () => void }) {
   return (
