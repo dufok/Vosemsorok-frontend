@@ -1,15 +1,14 @@
 {
-  "routes": [
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/maintenance.html" }
+  ],
+  "headers": [
     {
-      "src": "^/(index\\.html)?$",
-      "dest": "/maintenance.html",
-      "headers": { "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store" }
-    },
-    { "handle": "filesystem" },
-    {
-      "src": "/(.*)",
-      "dest": "/maintenance.html",
-      "headers": { "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store" }
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
     }
   ]
 }
